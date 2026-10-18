@@ -1,0 +1,179 @@
+/* ==========================================================================
+   Slide Specialized Animations (Consolidated from Slides 1..5)
+   Extracted from inline <style> tags to eliminate synchronous style recalculations
+   during WAAPI slide transitions.
+   ========================================================================== */
+
+/* --- Slide 01: Cover --- */
+@keyframes s1-rise { from { opacity: 0; transform: translate3d(0, 14px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+@keyframes s1-float { 0%,100% { transform: translateY(0) rotate(-1deg);} 50% { transform: translateY(-12px) rotate(1.2deg);} }
+@keyframes s1-rain { from { transform: translateY(-120px); opacity: 0;} 15% { opacity: .55;} 85% { opacity: .35;} to { transform: translateY(95vh); opacity: 0;} }
+@keyframes s1-aurora { 0%,100% { transform: translate3d(0,0,0) scale(1);} 50% { transform: translate3d(35px,-25px,0) scale(1.1);} }
+@keyframes s1-shine { 0% { background-position: 0% 50%;} 100% { background-position: 200% 50%;} }
+@keyframes s1-orbit { to { transform: rotate(360deg);} }
+@keyframes s1-ripple { 0% { transform: scale(.4); opacity: .7;} 100% { transform: scale(1.5); opacity: 0;} }
+@keyframes s1-bubble { 0% { transform: translateY(0); opacity: 0;} 20% { opacity: .9;} 100% { transform: translateY(-70px); opacity: 0;} }
+@keyframes s1-marker { 0%,100% { transform: translate(-50%,0);} 50% { transform: translate(-50%,-3px);} }
+@keyframes s1-sweep { 0% { transform: translateX(-120%);} 60%,100% { transform: translateX(220%);} }
+
+.s1-rise { opacity: 0; animation: s1-rise .4s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: var(--d, 0ms); will-change: transform, opacity; }
+.s1-float { animation: s1-float 7s ease-in-out infinite; }
+.s1-shine-text { background-size: 200% 100%; animation: s1-shine 5s linear infinite; }
+.s1-orbit { transform-origin: 250px 250px; animation: s1-orbit var(--t, 40s) linear infinite; }
+.s1-ripple { transform-origin: 250px 458px; animation: s1-ripple 3.6s ease-out infinite; animation-delay: var(--d, 0s); }
+.s1-bubble { animation: s1-bubble 4s ease-in infinite; animation-delay: var(--d, 0s); }
+.s1-marker { animation: s1-marker 2.4s ease-in-out infinite; }
+.s1-rain { animation: s1-rain var(--t) linear infinite; animation-delay: var(--d); }
+.s1-aurora { animation: s1-aurora 16s ease-in-out infinite; }
+.s1-sweep::after { content: ''; position: absolute; inset: 0; width: 40%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent); animation: s1-sweep 3.8s ease-in-out infinite; }
+.s1-glass { background: linear-gradient(145deg, rgba(20,52,72,.92), rgba(8,26,40,.96)); border: 1px solid rgba(84,215,232,.22); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 10px 30px -12px rgba(0,0,0,.6); }
+.s1-focus:focus-visible { outline: 2px solid #D8F36A; outline-offset: 3px; }
+
+/* --- Slide 02: Problem --- */
+@keyframes s2-rise { from { opacity: 0; transform: translate3d(0, 16px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+@keyframes s2-flow { to { stroke-dashoffset: -28; } }
+@keyframes s2-smoke { 0% { transform: translate(0,0) scale(.5); opacity: 0;} 20% { opacity: .55;} 100% { transform: translate(34px,-70px) scale(2.1); opacity: 0;} }
+@keyframes s2-drift { 0%,100% { transform: translateX(-8px);} 50% { transform: translateX(10px);} }
+@keyframes s2-twinkle { 0%,100% { opacity: .25;} 50% { opacity: 1;} }
+@keyframes s2-ripple { 0% { transform: scale(.2); opacity: .8;} 100% { transform: scale(1); opacity: 0;} }
+@keyframes s2-pulse { 0%,100% { transform: scale(1); opacity: .9;} 50% { transform: scale(1.5); opacity: .25;} }
+@keyframes s2-sheen { 0% { transform: translateX(-130%);} 100% { transform: translateX(260%);} }
+@keyframes s2-halo { 0% { transform: scale(.9); opacity: .55;} 100% { transform: scale(1.55); opacity: 0;} }
+
+.s2-rise { opacity: 0; animation: s2-rise .4s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: var(--d, 0ms); will-change: transform, opacity; }
+.s2-flow { animation: s2-flow 1.3s linear infinite; }
+.s2-rain { animation: s2-flow .7s linear infinite; }
+.s2-smoke { transform-box: fill-box; transform-origin: center; animation: s2-smoke 4.2s ease-out infinite; animation-delay: var(--sd, 0s); opacity: 0; }
+.s2-cloud { animation: s2-drift 9s ease-in-out infinite; }
+.s2-star { animation: s2-twinkle 3.4s ease-in-out infinite; animation-delay: var(--sd, 0s); }
+.s2-ripple { transform-box: fill-box; transform-origin: center; animation: s2-ripple 3.2s ease-out infinite; animation-delay: var(--sd, 0s); }
+.s2-pulse { transform-box: fill-box; transform-origin: center; animation: s2-pulse 2.2s ease-in-out infinite; }
+.s2-halo { position: absolute; inset: 0; border-radius: .75rem; border: 1.5px solid var(--c); animation: s2-halo 2.6s ease-out infinite; }
+.s2-zone { cursor: pointer; transition: opacity .45s ease; outline: none; }
+.s2-zone:focus-visible .s2-zone-label { stroke: #fff; stroke-width: 2.5; }
+.s2-band { transition: opacity .45s ease; }
+.s2-panel {
+  position: relative;
+  background: linear-gradient(165deg, rgba(18,52,74,.92), rgba(5,20,32,.97));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 30px 70px -34px rgba(0,0,0,.9);
+}
+.s2-card {
+  position: relative; overflow: hidden;
+  background: linear-gradient(165deg, rgba(18,52,74,.92), rgba(5,20,32,.96));
+  border: 1.5px solid var(--c, rgba(84,215,232,.3));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 24px 56px -30px rgba(0,0,0,.9);
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s;
+}
+.s2-card:hover::before, .s2-card[data-active='true']::before { opacity: 1; }
+.s2-card[data-active='true'] { transform: translateY(-4px); box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 30px 60px -20px var(--glow); }
+.s2-card:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.s2-sheen { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.s2-sheen::after { content: ''; position: absolute; top: 0; bottom: 0; width: 34%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.08), transparent); transform: translateX(-130%); }
+.s2-card:hover .s2-sheen::after { animation: s2-sheen 1.1s ease-out; }
+.s2-ask {
+  position: relative; overflow: hidden;
+  background: linear-gradient(120deg, rgba(216,243,106,.12), rgba(84,215,232,.08) 55%, rgba(5,20,32,.9));
+  border: 1.5px solid rgba(216,243,106,.4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 24px 50px -25px rgba(216,243,106,.3);
+}
+.s2-ask::after { content: ''; position: absolute; top: 0; bottom: 0; width: 30%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.08), transparent); animation: s2-sheen 6s ease-in-out infinite; animation-delay: 1.5s; pointer-events: none; }
+
+/* --- Slide 03: Team --- */
+.s3-root { font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
+.s3-display { font-family: 'Bricolage Grotesque', 'Be Vietnam Pro', system-ui, sans-serif; letter-spacing: -.02em; }
+@keyframes s3-in { from { opacity: 0; transform: translate3d(0, 14px, 0);} to { opacity: 1; transform: translate3d(0, 0, 0);} }
+@keyframes s3-img { from { opacity: 0; transform: scale(1.04);} to { opacity: 1; transform: scale(1);} }
+@keyframes s3-spin { to { transform: translate(-50%,-50%) rotate(360deg);} }
+@keyframes s3-float { 0%,100% { transform: translate3d(0,0,0) scale(1);} 50% { transform: translate3d(28px,-22px,0) scale(1.08);} }
+@keyframes s3-sheen { from { transform: translateX(-130%) skewX(-18deg);} to { transform: translateX(420%) skewX(-18deg);} }
+
+.s3-in { opacity: 0; animation: s3-in .35s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: var(--d, 0ms); will-change: transform, opacity; }
+.s3-img { animation: s3-img .9s cubic-bezier(.2,.8,.2,1) both; }
+.s3-float { animation: s3-float 14s ease-in-out infinite; }
+.s3-orbit { position:absolute; left:50%; top:var(--cy,38%); border-radius:9999px; transform: translate(-50%,-50%); }
+.s3-spin { animation: s3-spin 50s linear infinite; }
+.s3-glass { background: linear-gradient(155deg, rgba(18,50,74,.8), rgba(5,17,28,.96)); box-shadow: 0 50px 100px -30px rgba(0,0,0,.9); }
+.s3-grid { background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px); background-size: 44px 44px; -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 25%, transparent 75%); mask-image: radial-gradient(ellipse at 50% 40%, #000 25%, transparent 75%); }
+.s3-sheen::after { content:''; position:absolute; top:0; bottom:0; left:0; width:20%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.16), transparent); animation: s3-sheen 7s ease-in-out 1.6s infinite; pointer-events:none; }
+.s3-scroll::-webkit-scrollbar { display: none; }
+.s3-scroll { scrollbar-width: none; }
+.s3-focus:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.s3-tip { opacity: 0; transform: translateX(-6px); transition: all .2s; }
+.group:hover .s3-tip, .group:focus-visible .s3-tip { opacity: 1; transform: none; }
+
+/* --- Slide 04: Roadmap --- */
+@keyframes s4-rise { from { opacity: 0; transform: translate3d(0, 16px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+@keyframes s4-dot { 0% { left: 0; opacity: 0;} 15% { opacity: 1;} 85% { opacity: 1;} 100% { left: calc(100% - 8px); opacity: 0;} }
+@keyframes s4-spin { to { transform: rotate(360deg);} }
+@keyframes s4-spin-rev { to { transform: rotate(-360deg);} }
+@keyframes s4-drop { 0% { transform: translateY(-8px); opacity: 0;} 25% { opacity: 1;} 70% { transform: translateY(14px); opacity: 1;} 100% { transform: translateY(18px); opacity: 0;} }
+@keyframes s4-ripple { 0%,60% { transform: scale(.2); opacity: 0;} 70% { opacity: .9;} 100% { transform: scale(1.4); opacity: 0;} }
+@keyframes s4-bubble { 0% { transform: translateY(8px); opacity: 0;} 30% { opacity: 1;} 100% { transform: translateY(-14px); opacity: 0;} }
+@keyframes s4-blob { 0%,100% { transform: translate3d(0,0,0) scale(1);} 50% { transform: translate3d(30px,-24px,0) scale(1.12);} }
+@keyframes s4-sheen { 0% { transform: translateX(-120%);} 100% { transform: translateX(220%);} }
+@keyframes s4-ring { 0% { transform: scale(.9); opacity: .55;} 100% { transform: scale(1.5); opacity: 0;} }
+
+.s4-rise { opacity: 0; animation: s4-rise .4s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: var(--d, 0ms); will-change: transform, opacity; }
+.s4-orbit { transform-origin: 40px 40px; animation: s4-spin 6s linear infinite; }
+.s4-orbit-rev { transform-origin: 40px 40px; animation: s4-spin-rev 9s linear infinite; }
+.s4-drop { animation: s4-drop 2.2s ease-in infinite; }
+.s4-ripple { transform-origin: 40px 60px; animation: s4-ripple 2.2s ease-out infinite; }
+.s4-bubble { animation: s4-bubble 2.4s ease-out infinite; }
+.s4-card {
+  position: relative;
+  background: linear-gradient(165deg, rgba(18,52,74,.92), rgba(5,20,32,.97));
+  border: 1.5px solid var(--c, rgba(84,215,232,.3));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 24px 50px -25px rgba(0,0,0,.8);
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s;
+}
+.s4-card:hover { transform: translateY(-4px); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 30px 60px -20px var(--glow); }
+.s4-card:hover::before { opacity: 1; }
+.s4-sheen { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.s4-sheen::after { content: ''; position: absolute; top: 0; bottom: 0; width: 38%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.07), transparent); transform: translateX(-120%); }
+.s4-card:hover .s4-sheen::after { animation: s4-sheen 1.1s ease-out; }
+.s4-halo { position: absolute; inset: 0; border-radius: 1rem; border: 1.5px solid var(--c); animation: s4-ring 2.8s ease-out infinite; animation-delay: var(--hd, 0s); }
+.s4-blob { animation: s4-blob 14s ease-in-out infinite; }
+.s4-linkdot { position: absolute; top: 50%; margin-top: -4px; width: 8px; height: 8px; border-radius: 9999px; background: #fff; box-shadow: 0 0 12px 3px var(--c); animation: s4-dot 2.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+
+/* --- Slide 05: Definition --- */
+@keyframes s5-rise { from { opacity: 0; transform: translate3d(0, 16px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+@keyframes s5-flow { to { stroke-dashoffset: -24; } }
+@keyframes s5-fall { 0% { transform: translateY(-6px); opacity: 0;} 25% { opacity: 1;} 100% { transform: translateY(14px); opacity: 0;} }
+@keyframes s5-bob { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-3px);} }
+@keyframes s5-halo { 0% { transform: scale(.9); opacity: .55;} 100% { transform: scale(1.6); opacity: 0;} }
+@keyframes s5-sheen { 0% { transform: translateX(-130%);} 100% { transform: translateX(260%);} }
+@keyframes s5-blob { 0%,100% { transform: translate3d(0,0,0) scale(1);} 50% { transform: translate3d(26px,-20px,0) scale(1.12);} }
+@keyframes s5-dot { 0%,100% { transform: scale(1); opacity: 1;} 50% { transform: scale(1.7); opacity: .35;} }
+
+.s5-rise { opacity: 0; animation: s5-rise .4s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: var(--d, 0ms); will-change: transform, opacity; }
+.s5-flow { animation: s5-flow 1s linear infinite; }
+.s5-fall { transform-box: fill-box; transform-origin: center; animation: s5-fall 2s ease-in infinite; animation-delay: var(--sd, 0s); opacity: 0; }
+.s5-bob { animation: s5-bob 3.2s ease-in-out infinite; }
+.s5-halo { position: absolute; inset: 0; border-radius: .85rem; border: 1.5px solid var(--c); animation: s5-halo 2.8s ease-out infinite; animation-delay: var(--hd, 0s); }
+.s5-blob { animation: s5-blob 14s ease-in-out infinite; }
+.s5-dot { animation: s5-dot 2s ease-in-out infinite; }
+.s5-card {
+  position: relative; overflow: hidden;
+  background: linear-gradient(165deg, rgba(18,52,74,.92), rgba(5,20,32,.97));
+  border: 1.5px solid var(--c, rgba(84,215,232,.3));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 24px 50px -25px rgba(0,0,0,.8);
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s;
+}
+.s5-card:hover { transform: translateY(-4px); box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 30px 60px -20px var(--glow); }
+.s5-card:hover::before { opacity: 1; }
+.s5-sheen { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.s5-sheen::after { content: ''; position: absolute; top: 0; bottom: 0; width: 34%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.08), transparent); transform: translateX(-130%); }
+.s5-card:hover .s5-sheen::after { animation: s5-sheen 1.1s ease-out; }
+
+/* Reduced motion suppression */
+@media (prefers-reduced-motion: reduce) {
+  .s1-rise, .s1-float, .s1-shine-text, .s1-orbit, .s1-ripple, .s1-bubble, .s1-marker, .s1-rain, .s1-aurora, .s1-sweep::after,
+  .s2-rise, .s2-flow, .s2-rain, .s2-smoke, .s2-cloud, .s2-star, .s2-ripple, .s2-pulse, .s2-halo, .s2-ask::after,
+  .s3-in, .s3-img, .s3-float, .s3-spin, .s3-sheen::after,
+  .s4-rise, .s4-orbit, .s4-orbit-rev, .s4-drop, .s4-ripple, .s4-bubble, .s4-blob, .s4-halo, .s4-linkdot,
+  .s5-rise, .s5-flow, .s5-fall, .s5-bob, .s5-halo, .s5-blob, .s5-dot {
+    animation: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+}

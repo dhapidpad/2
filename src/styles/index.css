@@ -1,0 +1,513 @@
+@import './slideAnimations.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-deep: #050E17;
+    --bg-surface: #081724;
+    --bg-card: #0D2232;
+    --border-color: #1E3A4D;
+    --cyan-accent: #54D7E8;
+    --lime-accent: #D8F36A;
+    --coral-accent: #FF875F;
+    --red-accent: #F06B70;
+    --text-primary: #F8FAFC;
+    --text-muted: #94A3B8;
+    /* Motion tokens — Optimized for 60fps/120fps smooth presentation */
+    --motion-fast: 140ms;
+    --motion-ui: 200ms;
+    --motion-enter: 280ms;
+    --motion-cinematic: 380ms;
+    --motion-stagger: 40ms;
+    --ease-standard: cubic-bezier(.2,.8,.2,1);
+    --ease-emphasized: cubic-bezier(.16,1,.3,1);
+  }
+
+  html, body {
+    background-color: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Be Vietnam Pro', 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+  }
+
+  /* Chữ không bao giờ tràn khung: từ dài (tên hợp chất, số liệu) tự xuống dòng */
+  h1, h2, h3, h4 { text-wrap: balance; overflow-wrap: break-word; }
+  p, li { text-wrap: pretty; overflow-wrap: break-word; }
+  button, [role="button"] { -webkit-tap-highlight-color: transparent; }
+
+  :focus-visible {
+    outline: 2px solid var(--cyan-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* Atmospheric Mesh Gradients */
+.bg-atmospheric {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(84, 215, 232, 0.11) 0%, transparent 42%),
+    radial-gradient(circle at 88% 82%, rgba(216, 243, 106, 0.07) 0%, transparent 45%),
+    radial-gradient(circle at 75% 20%, rgba(255, 135, 95, 0.06) 0%, transparent 38%),
+    radial-gradient(circle at 50% 50%, rgba(13, 34, 50, 0.5) 0%, transparent 72%),
+    #050E17;
+}
+
+/* Glassmorphism Cards — Optimized for high frame-rate GPU rendering */
+.glass-panel {
+  background: linear-gradient(155deg, rgba(14, 38, 56, 0.94) 0%, rgba(7, 20, 30, 0.98) 100%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(84, 215, 232, 0.18);
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Viền gradient mảnh quanh glass panel (cyan -> trong suốt -> lime) cho cảm giác "xịn" hơn */
+.glass-panel:not(.absolute):not(.fixed):not(.sticky) {
+  position: relative;
+}
+.glass-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(140deg, rgba(84, 215, 232, 0.55), rgba(84, 215, 232, 0) 38%, rgba(216, 243, 106, 0) 62%, rgba(216, 243, 106, 0.4));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.glass-panel-hover {
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.glass-panel-hover:hover {
+  background: linear-gradient(155deg, rgba(20, 52, 76, 0.88) 0%, rgba(10, 28, 44, 0.92) 100%);
+  border-color: rgba(84, 215, 232, 0.45);
+  box-shadow: 0 16px 44px -6px rgba(4, 14, 24, 0.75), 0 0 24px rgba(84, 215, 232, 0.18), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-3px);
+}
+
+/* Glowing Text */
+.text-glow-cyan {
+  text-shadow: 0 0 24px rgba(84, 215, 232, 0.5), 0 0 48px rgba(84, 215, 232, 0.2);
+}
+
+.text-glow-lime {
+  text-shadow: 0 0 24px rgba(216, 243, 106, 0.5), 0 0 48px rgba(216, 243, 106, 0.2);
+}
+
+.text-glow-coral {
+  text-shadow: 0 0 24px rgba(255, 135, 95, 0.5), 0 0 48px rgba(255, 135, 95, 0.2);
+}
+
+/* Equation Box Ultra */
+.equation-highlight {
+  background: linear-gradient(135deg, rgba(18, 46, 66, 0.92) 0%, rgba(8, 22, 34, 0.96) 100%);
+  border: 1.5px solid rgba(216, 243, 106, 0.45);
+  box-shadow: 0 10px 36px -6px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 0 28px rgba(216, 243, 106, 0.12);
+}
+
+/* Keyframe Animations */
+@keyframes slideEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.992);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float3D {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -8px, 0) rotate(0.8deg); }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -5px, 0); }
+}
+
+@keyframes atmosphericPulse {
+  0%, 100% { transform: scale(1) translate3d(0, 0, 0); opacity: 0.85; }
+  50% { transform: scale(1.02) translate3d(0, -3px, 0); opacity: 1; }
+}
+
+@keyframes orbitSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes dashFlow {
+  from { stroke-dashoffset: 48; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes dashFlowReverse {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: 48; }
+}
+
+@keyframes rainStreak {
+  0% { transform: translate3d(0, -20px, 0); opacity: 0; }
+  20% { opacity: 0.85; }
+  85% { opacity: 0.65; }
+  100% { transform: translate3d(0, 80px, 0); opacity: 0; }
+}
+
+@keyframes bubbleRise {
+  0% { transform: translate3d(0, 0, 0) scale(0.7); opacity: 0; }
+  25% { opacity: 0.9; }
+  100% { transform: translate3d(0, -38px, 0) scale(1.1); opacity: 0; }
+}
+
+@keyframes pulseRing {
+  0% { transform: scale(0.85); opacity: 0.75; }
+  70% { transform: scale(1.4); opacity: 0; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+@keyframes pistonStroke {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  45% { transform: translate3d(0, -18px, 0); }
+  55% { transform: translate3d(0, -18px, 0); }
+}
+
+@keyframes sparkFlash {
+  0%, 38%, 62%, 100% { opacity: 0.15; transform: scale(0.85); }
+  45%, 52% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes ionLeach {
+  0% { transform: translate3d(0, 0, 0); opacity: 0.2; }
+  30% { opacity: 1; }
+  80% { opacity: 0.9; }
+  100% { transform: translate3d(0, 30px, 0); opacity: 0; }
+}
+
+@keyframes smokeRise {
+  0% { transform: translate3d(0, 0, 0) scale(0.8); opacity: 0; }
+  30% { opacity: 0.65; }
+  100% { transform: translate3d(20px, -40px, 0) scale(1.35); opacity: 0; }
+}
+
+/* Utility Animation Classes */
+.animate-slide-enter {
+  animation: slideEnter 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Directional slide transitions — GPU hardware-accelerated 60fps/120fps (Silky Smooth) */
+@keyframes slideEnterNext {
+  from { opacity: 0; transform: translate3d(24px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes slideEnterPrev {
+  from { opacity: 0; transform: translate3d(-24px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes slideEnterFade {
+  from { opacity: 0; transform: scale(0.985) translateZ(0); }
+  to { opacity: 1; transform: scale(1) translateZ(0); }
+}
+.animate-slide-next,
+.animate-slide-enter-next,
+.animate-slide-prev,
+.animate-slide-enter-prev,
+.animate-slide-fade,
+.animate-slide-enter-fade {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Freeze exiting layer animations to free 100% GPU/CPU for slide transition */
+.pause-animations,
+.pause-animations * {
+  animation-play-state: paused !important;
+}
+.animate-slide-next,
+.animate-slide-enter-next {
+  animation: slideEnterNext 280ms cubic-bezier(.16, 1, .3, 1) both;
+}
+.animate-slide-prev,
+.animate-slide-enter-prev {
+  animation: slideEnterPrev 280ms cubic-bezier(.16, 1, .3, 1) both;
+}
+.animate-slide-fade,
+.animate-slide-enter-fade {
+  animation: slideEnterFade 300ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeInUp var(--motion-ui, 240ms) var(--ease-standard, cubic-bezier(.2,.8,.2,1)) both;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-float-3d {
+  animation: float3D 6s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: floatSlow 4.5s ease-in-out infinite;
+}
+
+.animate-pulse-subtle {
+  animation: atmosphericPulse 6s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: orbitSpin 35s linear infinite;
+}
+
+.animate-dash-flow {
+  animation: dashFlow 2.2s linear infinite;
+}
+
+.animate-dash-fast {
+  animation: dashFlow 1.2s linear infinite;
+}
+
+.animate-rain-streak {
+  animation: rainStreak 2.4s linear infinite;
+}
+
+.animate-bubble-rise {
+  animation: bubbleRise 3.2s ease-in infinite;
+}
+
+.animate-pulse-ring {
+  animation: pulseRing 2.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.animate-piston {
+  animation: pistonStroke 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.animate-spark {
+  animation: sparkFlash 2.8s ease-in-out infinite;
+}
+
+.animate-ion-leach {
+  animation: ionLeach 3.2s ease-in-out infinite;
+}
+
+.animate-smoke-rise {
+  animation: smokeRise 4s ease-out infinite;
+}
+
+/* Staggered Entrance Utilities */
+.stagger-1 { animation-delay: 60ms; }
+.stagger-2 { animation-delay: 130ms; }
+.stagger-3 { animation-delay: 200ms; }
+.stagger-4 { animation-delay: 270ms; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(5, 14, 23, 0.55);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(41, 72, 90, 0.8);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #54D7E8;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Reduced motion preference & manual toggle */
+.reduced-motion *,
+.reduced-motion ::before,
+.reduced-motion ::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-slide-next,
+  .animate-slide-prev,
+  .animate-slide-fade,
+  .animate-slide-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Slide content area — consistent padding */
+.slide-content-area {
+  padding: clamp(0.75rem, 3vw, 2rem);
+}
+
+/* Zero-Overlap Presentation Grid Architecture (GEMINI_FULL_SPEC_ACID_V4 §9) */
+#app-root {
+  display: grid;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  grid-template-columns: minmax(0, 1fr) var(--panel-w, 0px);
+  grid-template-rows: minmax(0, 1fr) var(--dock-h, 48px);
+  grid-template-areas: "stage panel" "dock dock";
+  /* Không animate grid: mỗi frame đổi cột sẽ làm cả slide tính lại => giật.
+     Thay bằng: panel trượt (transform) + canvas chuyển scale bằng transition ở dưới. */
+}
+
+/* Canvas: SlideShell có chiều cao xác định = chiều cao canvas, để `min-h-full` của slide con
+   resolve được và các khối `justify-between` giãn đủ khung thay vì dồn lên đầu. */
+[data-canvas="true"] [data-slide-shell] {
+  height: 100%;
+}
+
+/* Canvas mode (cố định 1280px): đảm bảo các lưới desktop luôn giữ nguyên bố cục rộng khi co màn hình */
+[data-canvas="true"] .lg\:grid-cols-12 {
+  grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+}
+[data-canvas="true"] .lg\:col-span-7 {
+  grid-column: span 7 / span 7 !important;
+}
+[data-canvas="true"] .lg\:col-span-5 {
+  grid-column: span 5 / span 5 !important;
+}
+[data-canvas="true"] .lg\:col-span-6 {
+  grid-column: span 6 / span 6 !important;
+}
+[data-canvas="true"] .lg\:col-span-4 {
+  grid-column: span 4 / span 4 !important;
+}
+[data-canvas="true"] .lg\:col-span-8 {
+  grid-column: span 8 / span 8 !important;
+}
+[data-canvas="true"] .lg\:grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+[data-canvas="true"] .lg\:grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+[data-canvas="true"] .lg\:grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+[data-stage] {
+  grid-area: stage;
+  position: relative;
+  overflow: hidden;
+  contain: layout paint;
+}
+
+[data-panel] {
+  grid-area: panel;
+  overflow: hidden;
+  min-width: 0;
+}
+
+[data-dock] {
+  grid-area: dock;
+  min-height: 0;
+}
+
+#app-root[data-panel-pos="left"] {
+  grid-template-columns: var(--panel-w, 0px) minmax(0, 1fr);
+  grid-template-areas: "panel stage" "dock dock";
+}
+
+#app-root[data-layout="reflow"] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) var(--sheet-h, 0px) var(--dock-h, 56px);
+  grid-template-areas: "stage" "sheet" "dock";
+}
+
+#app-root[data-layout="reflow"] [data-panel] {
+  grid-area: sheet;
+}
+
+#app-root[data-present="true"] {
+  --dock-h: 0px !important;
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  #app-root:not([data-present="true"]) {
+    --dock-h: 40px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app-root,
+  #app-root[data-layout="reflow"] {
+    transition: none !important;
+  }
+}
+
+
+/* ===== Chuyển động mượt, chỉ dùng transform/opacity (compositor) ===== */
+
+/* Khi sidebar mở/đóng hoặc cửa sổ đổi cỡ, canvas trượt/zoom sang vị trí mới thay vì nhảy cóc */
+[data-canvas="true"] {
+  transition: transform 360ms var(--ease-emphasized);
+}
+/* Đang kéo sidebar hoặc đang kéo cửa sổ: bám tay ngay, không trễ */
+html[data-dragging] [data-canvas="true"],
+html[data-resizing] [data-canvas="true"] {
+  transition: none !important;
+}
+html[data-dragging] { cursor: col-resize; }
+html[data-dragging] * { user-select: none !important; }
+
+[data-panel] { backface-visibility: hidden; }
+[data-panel][data-state="open"][data-anim="open"] { animation: panelIn 340ms var(--ease-emphasized) both; }
+[data-panel][data-state="open"][data-anim="swap"] { animation: panelSwap 200ms var(--ease-standard) both; }
+[data-panel][data-state="closing"] { animation: panelOut 280ms cubic-bezier(.4, 0, 1, 1) both; pointer-events: none; }
+#app-root[data-panel-pos="left"] [data-panel] { --p-dx: -32px; }
+@keyframes panelIn  { from { opacity: 0; transform: translate3d(var(--p-dx, 32px), 0, 0); } to { opacity: 1; transform: none; } }
+@keyframes panelOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translate3d(var(--p-dx, 32px), 0, 0); } }
+@keyframes panelSwap { from { opacity: 0; } to { opacity: 1; } }
+
+/* Điện thoại dọc: bottom sheet trượt từ dưới lên */
+#app-root[data-layout="reflow"] [data-panel][data-state="open"][data-anim="open"] { animation-name: sheetIn; }
+#app-root[data-layout="reflow"] [data-panel][data-state="closing"] { animation-name: sheetOut; }
+@keyframes sheetIn  { from { opacity: 0; transform: translate3d(0, 28px, 0); } to { opacity: 1; transform: none; } }
+@keyframes sheetOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translate3d(0, 28px, 0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-canvas="true"] { transition: none !important; }
+}
