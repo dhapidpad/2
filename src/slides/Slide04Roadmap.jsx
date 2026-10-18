@@ -1,5 +1,6 @@
-import React from 'react';
-import { CheckCircle2, ChevronRight, Eye, FlaskConical, Scale, Lightbulb } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle2, ChevronRight, ChevronLeft, Eye, FlaskConical, Scale, Lightbulb, ListFilter, Layers } from 'lucide-react';
+import { sfx } from '../audio/sfx';
 
 /* ───────────────────────── DỮ LIỆU ───────────────────────── */
 const CARDS = [
@@ -303,8 +304,98 @@ function trackMouse(e) {
   e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
 }
 
+function MobilePillarCard({ card }) {
+  return (
+    <article
+      style={{ '--c': card.color }}
+      className="rm4-card rounded-2xl p-3.5 sm:p-4 flex flex-col gap-3 border shadow-xl bg-[#091C2C]/90"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <span
+            className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0"
+            style={{ background: card.color, color: '#050E17', boxShadow: `0 4px 14px ${card.color}66` }}
+          >
+            {card.step}
+          </span>
+          <div>
+            <span className="block text-[11px] font-semibold tracking-wide" style={{ color: card.color }}>
+              Trụ cột {card.step} · {card.subtitle}
+            </span>
+            <h3 className="text-xl font-black text-white leading-tight">{card.title}</h3>
+          </div>
+        </div>
+      </div>
+
+      {/* SVG Minh họa co gọn cho màn hình điện thoại */}
+      <div className="relative rounded-xl overflow-hidden max-h-[140px] border border-white/5 bg-[#050E17]/60">
+        <Illustration step={card.step} color={card.color} />
+      </div>
+
+      {/* Câu hỏi trọng tâm */}
+      <p
+        className="pl-3 py-1 border-l-[3px] rounded-r-lg text-sm font-bold text-white leading-snug"
+        style={{ borderColor: card.color, background: `linear-gradient(90deg, ${card.color}1A, transparent)` }}
+      >
+        {card.question}
+      </p>
+
+      {/* Ý chính */}
+      <ul className="space-y-1.5 text-xs text-[#DCE6F0]">
+        {card.details.map((item, i) => (
+          <li key={i} className="flex items-start gap-2 leading-snug">
+            <CheckCircle2 size={14} className="mt-0.5 shrink-0" style={{ color: card.color }} />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+
+      {/* Phương trình tiêu biểu */}
+      <div className="border-t border-white/10 pt-2.5 mt-0.5">
+        <span className="block text-[10.5px] text-[#A8BBC8] mb-1">Phương trình hóa học tiêu biểu</span>
+        <div
+          className="rounded-xl px-2.5 py-2 bg-[#050E17]/90 border font-mono font-bold text-[11px] sm:text-xs leading-relaxed flex flex-wrap items-center gap-x-2 gap-y-1"
+          style={{ borderColor: `${card.color}55`, boxShadow: `inset 0 0 16px ${card.color}14` }}
+        >
+          <span className="text-white">{card.eq.left}</span>
+          <span
+            className="w-4 h-4 rounded-full inline-flex items-center justify-center text-[10px]"
+            style={{ background: `${card.color}26`, color: card.color }}
+          >
+            →
+          </span>
+          <span style={{ color: card.color }}>{card.eq.right}</span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 /* ───────────────────────── SLIDE ───────────────────────── */
 export default function Slide04Roadmap() {
+  const [mobileStep, setMobileStep] = useState(0);
+  const [viewAllMobile, setViewAllMobile] = useState(false);
+  const activeCard = CARDS[mobileStep];
+
+  const handleSelectTab = (idx) => {
+    setMobileStep(idx);
+    sfx.pop?.(1 + idx * 0.15);
+  };
+
+  const handlePrev = () => {
+    if (mobileStep > 0) {
+      setMobileStep((prev) => prev - 1);
+      sfx.tick?.();
+    }
+  };
+
+  const handleNext = () => {
+    if (mobileStep < CARDS.length - 1) {
+      setMobileStep((prev) => prev + 1);
+      sfx.tick?.();
+    }
+  };
+
   return (
     <div className="rm4 w-full min-h-full flex flex-col justify-between gap-5 py-1 relative select-none">
       <style>{CSS}</style>
@@ -356,8 +447,119 @@ export default function Slide04Roadmap() {
         </div>
       </header>
 
-      {/* Thẻ */}
-      <div className="relative z-10 my-auto flex flex-col lg:flex-row lg:items-stretch gap-4 lg:gap-0">
+      {/* Mobile View (< lg) */}
+      <div className="relative z-10 my-auto flex lg:hidden flex-col gap-3 w-full">
+        {/* Thanh chọn 3 trụ cột và nút chuyển chế độ */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Tab 3 trụ cột */}
+          <div className="flex-1 grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-[#050E17]/90 border border-white/10 backdrop-blur-md">
+            {CARDS.map((card, idx) => {
+              const isActive = !viewAllMobile && mobileStep === idx;
+              return (
+                <button
+                  key={card.step}
+                  type="button"
+                  onClick={() => {
+                    setViewAllMobile(false);
+                    handleSelectTab(idx);
+                  }}
+                  className={`relative py-1.5 px-1 sm:px-2 rounded-xl text-center transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                    isActive
+                      ? 'text-white font-black shadow-lg'
+                      : 'text-[#A8BBC8] hover:text-white font-semibold'
+                  }`}
+                  style={{
+                    backgroundColor: isActive ? `${card.color}24` : 'transparent',
+                    border: isActive ? `1px solid ${card.color}88` : '1px solid transparent',
+                  }}
+                >
+                  <span
+                    className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black shrink-0"
+                    style={{
+                      background: isActive ? card.color : 'rgba(255,255,255,0.1)',
+                      color: isActive ? '#050E17' : '#A8BBC8',
+                    }}
+                  >
+                    {card.step}
+                  </span>
+                  <span className="text-[11px] sm:text-xs truncate">{card.title}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Nút bật/tắt xem tất cả */}
+          <button
+            type="button"
+            onClick={() => {
+              setViewAllMobile(!viewAllMobile);
+              sfx.pop?.(1.4);
+            }}
+            title={viewAllMobile ? 'Xem từng thẻ' : 'Xem cả 3 thẻ'}
+            className="px-2.5 py-2 rounded-2xl bg-[#050E17]/90 border border-white/10 text-[#A8BBC8] hover:text-white flex items-center gap-1.5 text-xs font-semibold shrink-0"
+          >
+            {viewAllMobile ? <ListFilter size={15} /> : <Layers size={15} />}
+            <span className="hidden sm:inline">{viewAllMobile ? 'Từng thẻ' : 'Tất cả'}</span>
+          </button>
+        </div>
+
+        {/* Nội dung thẻ trên mobile */}
+        {viewAllMobile ? (
+          <div className="flex flex-col gap-3.5">
+            {CARDS.map((card) => (
+              <MobilePillarCard key={card.step} card={card} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <MobilePillarCard card={activeCard} />
+
+            {/* Stepper điều hướng */}
+            <div className="flex items-center justify-between px-2 py-1 bg-[#050E17]/60 rounded-xl border border-white/5">
+              <button
+                type="button"
+                onClick={handlePrev}
+                disabled={mobileStep === 0}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed text-white hover:bg-white/10"
+              >
+                <ChevronLeft size={16} />
+                <span>Trước</span>
+              </button>
+
+              {/* Dots */}
+              <div className="flex items-center gap-2">
+                {CARDS.map((c, i) => (
+                  <button
+                    key={c.step}
+                    type="button"
+                    onClick={() => handleSelectTab(i)}
+                    className="transition-all duration-300 rounded-full"
+                    style={{
+                      width: mobileStep === i ? '20px' : '7px',
+                      height: '7px',
+                      backgroundColor: mobileStep === i ? c.color : 'rgba(255,255,255,0.25)',
+                    }}
+                    aria-label={`Đi tới Trụ cột ${c.step}`}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={mobileStep === CARDS.length - 1}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed text-white hover:bg-white/10"
+              >
+                <span>Tiếp theo</span>
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Cards (>= lg) */}
+      <div className="relative z-10 my-auto hidden lg:flex lg:flex-row lg:items-stretch gap-0">
         {CARDS.map((card, idx) => (
           <React.Fragment key={card.step}>
             <article
@@ -430,18 +632,18 @@ export default function Slide04Roadmap() {
       </div>
 
       {/* Phương pháp 4 bước */}
-      <div className="relative z-10 rm4-rise rm4-card rounded-2xl px-4 sm:px-6 py-4" style={{ '--d': '640ms', '--c': '#54D7E8' }}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+      <div className="relative z-10 rm4-rise rm4-card rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4" style={{ '--d': '640ms', '--c': '#54D7E8' }}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <span className="text-xs sm:text-sm font-bold text-[#54D7E8] tracking-wide shrink-0">Phương pháp tiếp cận 4 bước</span>
-          <ol className="flex-1 flex flex-wrap md:flex-nowrap items-center justify-between gap-2">
+          <ol className="flex-1 grid grid-cols-2 md:flex md:flex-nowrap items-center justify-between gap-2">
             {METHOD.map((m, i) => {
               const Icon = m.icon;
               return (
                 <React.Fragment key={m.label}>
-                  <li className="flex items-center gap-2 bg-[#071521]/85 px-3 py-1.5 rounded-xl border border-[#29485A]/80">
-                    <span className="w-6 h-6 rounded-lg bg-[#54D7E8]/15 text-[#54D7E8] flex items-center justify-center font-mono text-xs font-bold">{i + 1}</span>
-                    <Icon size={14} className="text-[#D8F36A]" />
-                    <span className="text-xs sm:text-sm font-semibold text-white whitespace-nowrap">{m.label}</span>
+                  <li className="flex items-center gap-2 bg-[#071521]/85 px-2.5 py-1.5 sm:px-3 rounded-xl border border-[#29485A]/80">
+                    <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-[#54D7E8]/15 text-[#54D7E8] flex items-center justify-center font-mono text-[11px] sm:text-xs font-bold shrink-0">{i + 1}</span>
+                    <Icon size={14} className="text-[#D8F36A] shrink-0" />
+                    <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-white whitespace-nowrap truncate">{m.label}</span>
                   </li>
                   {i < METHOD.length - 1 && (
                     <span aria-hidden="true" className="hidden md:block flex-1 h-px min-w-3"
