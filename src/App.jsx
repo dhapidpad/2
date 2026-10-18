@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import FitStage from './components/FitStage';
 import SlideTransitioner from './components/SlideTransitioner';
 import SlideShell from './components/SlideShell';
@@ -47,9 +48,9 @@ export default function App() {
   const [panelWidth, setPanelWidth] = useState(() => {
     try {
       const savedW = localStorage.getItem('acid_panel_width');
-      return savedW ? parseInt(savedW, 10) : 320;
+      return savedW ? parseInt(savedW, 10) : 280;
     } catch {
-      return 320;
+      return 280;
     }
   });
   const [panelPos, setPanelPos] = useState(() => {
@@ -589,7 +590,7 @@ export default function App() {
       data-panel-pos={panelPos}
       style={{
         '--dock-h': isPresentMode ? '0px' : layoutMode === 'reflow' ? '56px' : '48px',
-        '--panel-w': panelRendered && layoutMode === 'canvas' ? (isPanelCompact ? '60px' : `${panelWidth}px`) : '0px',
+        '--panel-w': panelRendered && layoutMode === 'canvas' ? (isPanelCompact ? '56px' : `${panelWidth}px`) : '0px',
         '--sheet-h': panelRendered && layoutMode === 'reflow' ? mobileSheetHeight : '0px',
       }}
       className="bg-[#050E17] text-[#F8FAFC] select-none font-sans relative"
@@ -744,6 +745,27 @@ export default function App() {
 
       {/* OVERLAY OK (Contract: [data-overlay-ok] for laser, toasts, floating dock in present mode) */}
       <div data-overlay-ok>
+        {/* Floating Quick Edge Toggle Tab when Sidebar is closed */}
+        {!isPanelOpen && !isPresentMode && layoutMode === 'canvas' && (
+          <button
+            onClick={() => {
+              sfx.tick();
+              setIsPanelOpen(true);
+            }}
+            aria-label="Mở nhanh bảng kịch bản và mục lục"
+            title="Mở sidebar kịch bản & mục lục (Phím N hoặc G)"
+            className={`fixed top-1/2 -translate-y-1/2 z-40 flex items-center gap-1 py-3 px-1.5 bg-[#081724]/90 hover:bg-[#0D2234] border border-[#1E3A4D] hover:border-[#54D7E8]/70 text-[#94A3B8] hover:text-[#54D7E8] backdrop-blur-md shadow-2xl transition-all duration-200 active:scale-95 group ${
+              panelPos === 'right'
+                ? 'right-0 rounded-l-2xl border-r-0 hover:pl-2.5'
+                : 'left-0 rounded-r-2xl border-l-0 hover:pr-2.5'
+            }`}
+          >
+            {panelPos === 'right' ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}
+            <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-bold tracking-widest uppercase select-none opacity-80 group-hover:opacity-100">
+              Kịch bản • Mục lục
+            </span>
+          </button>
+        )}
         {/* Laser pointer dot (§12.6) */}
         {laserMode === 'laser' && (
           <div
