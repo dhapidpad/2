@@ -304,67 +304,120 @@ function trackMouse(e) {
   e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
 }
 
-function MobilePillarCard({ card }) {
+function SinglePillarCard({ card, onPrev, onNext, isFirst, isLast, stepIndex, totalSteps, onSelectStep }) {
   return (
     <article
       style={{ '--c': card.color }}
-      className="rm4-card rounded-2xl p-3.5 sm:p-4 flex flex-col gap-3 border shadow-xl bg-[#091C2C]/90"
+      className="rm4-card rounded-2xl sm:rounded-3xl p-3 sm:p-4 md:p-5 flex flex-col justify-between border shadow-2xl bg-[#071624]/90 backdrop-blur-md w-full max-w-[1240px] mx-auto"
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <span
-            className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0"
-            style={{ background: card.color, color: '#050E17', boxShadow: `0 4px 14px ${card.color}66` }}
-          >
-            {card.step}
-          </span>
-          <div>
-            <span className="block text-[11px] font-semibold tracking-wide" style={{ color: card.color }}>
-              Trụ cột {card.step} · {card.subtitle}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-5 md:gap-6 items-center">
+        {/* CỘT TRÁI (md:col-span-5): Tiêu đề + Hình minh họa + Phương trình */}
+        <div className="md:col-span-5 flex flex-col gap-2.5 sm:gap-3">
+          {/* Header của trụ cột */}
+          <div className="flex items-center gap-2.5">
+            <span
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-xs sm:text-sm shrink-0"
+              style={{ background: card.color, color: '#050E17', boxShadow: `0 4px 16px ${card.color}66` }}
+            >
+              {card.step}
             </span>
-            <h3 className="text-xl font-black text-white leading-tight">{card.title}</h3>
+            <div>
+              <span className="block text-[11px] sm:text-xs font-bold tracking-wide" style={{ color: card.color }}>
+                Trụ cột {card.step} · {card.subtitle}
+              </span>
+              <h3 className="text-lg sm:text-2xl font-black text-white leading-tight">{card.title}</h3>
+            </div>
+          </div>
+
+          {/* Khung minh họa SVG - khống chế kích thước chuẩn, không bao giờ bị phóng to hay tràn */}
+          <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#050E17]/80 w-full max-w-[340px] mx-auto p-1 shadow-inner">
+            <div className="w-full aspect-[240/132] max-h-[160px] flex items-center justify-center">
+              <Illustration step={card.step} color={card.color} />
+            </div>
+          </div>
+
+          {/* Phương trình hóa học tiêu biểu */}
+          <div
+            className="rounded-xl px-3 py-2 bg-[#050E17]/95 border font-mono font-bold text-[11px] sm:text-xs leading-relaxed flex flex-wrap items-center gap-x-2 gap-y-1 shadow-sm"
+            style={{ borderColor: `${card.color}45`, boxShadow: `inset 0 0 16px ${card.color}10` }}
+          >
+            <span className="text-white">{card.eq.left}</span>
+            <span
+              className="w-4 h-4 sm:w-5 sm:h-5 rounded-full inline-flex items-center justify-center text-[10px] sm:text-xs shrink-0"
+              style={{ background: `${card.color}26`, color: card.color }}
+            >
+              →
+            </span>
+            <span style={{ color: card.color }}>{card.eq.right}</span>
           </div>
         </div>
-      </div>
 
-      {/* SVG Minh họa co gọn cho màn hình điện thoại */}
-      <div className="relative rounded-xl overflow-hidden max-h-[140px] border border-white/5 bg-[#050E17]/60">
-        <Illustration step={card.step} color={card.color} />
-      </div>
-
-      {/* Câu hỏi trọng tâm */}
-      <p
-        className="pl-3 py-1 border-l-[3px] rounded-r-lg text-sm font-bold text-white leading-snug"
-        style={{ borderColor: card.color, background: `linear-gradient(90deg, ${card.color}1A, transparent)` }}
-      >
-        {card.question}
-      </p>
-
-      {/* Ý chính */}
-      <ul className="space-y-1.5 text-xs text-[#DCE6F0]">
-        {card.details.map((item, i) => (
-          <li key={i} className="flex items-start gap-2 leading-snug">
-            <CheckCircle2 size={14} className="mt-0.5 shrink-0" style={{ color: card.color }} />
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-
-      {/* Phương trình tiêu biểu */}
-      <div className="border-t border-white/10 pt-2.5 mt-0.5">
-        <span className="block text-[10.5px] text-[#A8BBC8] mb-1">Phương trình hóa học tiêu biểu</span>
-        <div
-          className="rounded-xl px-2.5 py-2 bg-[#050E17]/90 border font-mono font-bold text-[11px] sm:text-xs leading-relaxed flex flex-wrap items-center gap-x-2 gap-y-1"
-          style={{ borderColor: `${card.color}55`, boxShadow: `inset 0 0 16px ${card.color}14` }}
-        >
-          <span className="text-white">{card.eq.left}</span>
-          <span
-            className="w-4 h-4 rounded-full inline-flex items-center justify-center text-[10px]"
-            style={{ background: `${card.color}26`, color: card.color }}
+        {/* CỘT PHẢI (md:col-span-7): Câu hỏi trọng tâm + Checklist 4 ý + Stepper điều hướng */}
+        <div className="md:col-span-7 flex flex-col justify-between gap-3 h-full">
+          {/* Câu hỏi trọng tâm */}
+          <div
+            className="pl-3.5 pr-3 py-2 border-l-[3.5px] rounded-r-xl"
+            style={{ borderColor: card.color, background: `linear-gradient(90deg, ${card.color}18, transparent)` }}
           >
-            →
-          </span>
-          <span style={{ color: card.color }}>{card.eq.right}</span>
+            <span className="block text-[10.5px] uppercase tracking-wider font-extrabold text-[#A8BBC8] mb-0.5">
+              Câu hỏi trọng tâm
+            </span>
+            <p className="text-sm sm:text-base font-bold text-white leading-snug">
+              {card.question}
+            </p>
+          </div>
+
+          {/* 4 Ý chính */}
+          <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-[13px] text-[#DCE6F0]">
+            {card.details.map((item, i) => (
+              <li key={i} className="flex items-start gap-2.5 leading-snug">
+                <CheckCircle2 size={16} className="mt-0.5 shrink-0" style={{ color: card.color }} />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* Stepper điều hướng giữa 3 trụ cột */}
+          <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-1">
+            <button
+              type="button"
+              onClick={onPrev}
+              disabled={isFirst}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-25 disabled:cursor-not-allowed text-white hover:bg-white/10 active:scale-95"
+            >
+              <ChevronLeft size={16} />
+              <span>Trụ trước</span>
+            </button>
+
+            {/* Indicator Dots */}
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalSteps }).map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => onSelectStep(i)}
+                  className="transition-all duration-300 rounded-full"
+                  style={{
+                    width: stepIndex === i ? '24px' : '8px',
+                    height: '8px',
+                    backgroundColor: stepIndex === i ? card.color : 'rgba(255,255,255,0.25)',
+                    boxShadow: stepIndex === i ? `0 0 10px ${card.color}88` : 'none',
+                  }}
+                  aria-label={`Đi tới Trụ cột ${i + 1}`}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={isLast}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-25 disabled:cursor-not-allowed text-white hover:bg-white/10 active:scale-95"
+            >
+              <span>Trụ tiếp theo</span>
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       </div>
     </article>
@@ -373,31 +426,36 @@ function MobilePillarCard({ card }) {
 
 /* ───────────────────────── SLIDE ───────────────────────── */
 export default function Slide04Roadmap() {
-  const [mobileStep, setMobileStep] = useState(0);
-  const [viewAllMobile, setViewAllMobile] = useState(false);
-  const activeCard = CARDS[mobileStep];
+  const [activeStep, setActiveStep] = useState(0);
+  const [showAll, setShowAll] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth >= 1024 && Math.min(window.innerWidth, window.innerHeight) >= 600;
+  });
 
   const handleSelectTab = (idx) => {
-    setMobileStep(idx);
+    setActiveStep(idx);
+    setShowAll(false);
     sfx.pop?.(1 + idx * 0.15);
   };
 
   const handlePrev = () => {
-    if (mobileStep > 0) {
-      setMobileStep((prev) => prev - 1);
+    if (activeStep > 0) {
+      setActiveStep((prev) => prev - 1);
       sfx.tick?.();
     }
   };
 
   const handleNext = () => {
-    if (mobileStep < CARDS.length - 1) {
-      setMobileStep((prev) => prev + 1);
+    if (activeStep < CARDS.length - 1) {
+      setActiveStep((prev) => prev + 1);
       sfx.tick?.();
     }
   };
 
+  const activeCard = CARDS[activeStep];
+
   return (
-    <div className="rm4 w-full min-h-full flex flex-col justify-between gap-5 py-1 relative select-none">
+    <div className="rm4 w-full min-h-full flex flex-col justify-between gap-3 sm:gap-4 py-1 relative select-none">
       <style>{CSS}</style>
 
       {/* Nền */}
@@ -418,235 +476,212 @@ export default function Slide04Roadmap() {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 rm4-rise flex flex-col md:flex-row md:items-end md:justify-between gap-4" style={{ '--d': '0ms' }}>
+      <header className="relative z-10 rm4-rise flex flex-col md:flex-row md:items-end md:justify-between gap-2.5 sm:gap-4 max-w-[1240px] mx-auto w-full" style={{ '--d': '0ms' }}>
         <div>
-          <div className="flex flex-wrap items-center gap-2.5 mb-3">
-            <span className="px-3 py-1 rounded-full bg-[#54D7E8]/12 border border-[#54D7E8]/35 text-[#54D7E8] text-xs font-bold tracking-wide">
+          <div className="flex flex-wrap items-center gap-2 mb-1.5 sm:mb-2">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#54D7E8]/12 border border-[#54D7E8]/35 text-[#54D7E8] text-[11px] sm:text-xs font-bold tracking-wide">
               Mục tiêu &amp; Lộ trình khoa học
             </span>
-            <span className="text-xs text-[#A8BBC8]">Bám sát 3 câu hỏi trọng tâm của đề bài</span>
+            <span className="text-[11px] sm:text-xs text-[#A8BBC8]">Bám sát 3 câu hỏi trọng tâm của đề bài</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-[1.08]">
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-[1.1]">
             Hôm nay, chúng ta sẽ trả lời{' '}
             <span className="bg-clip-text text-transparent"
               style={{ backgroundImage: 'linear-gradient(90deg,#54D7E8 0%,#D8F36A 50%,#FF875F 100%)' }}>
               3 câu hỏi lớn
             </span>
           </h2>
-          <div className="mt-3 h-[3px] w-44 rounded-full" style={{ background: 'linear-gradient(90deg,#54D7E8,#D8F36A,#FF875F)' }} />
+          <div className="mt-2 h-[2.5px] w-36 sm:w-44 rounded-full" style={{ background: 'linear-gradient(90deg,#54D7E8,#D8F36A,#FF875F)' }} />
         </div>
 
         {/* Chuỗi phản ứng tổng quát */}
-        <div className="flex items-center gap-2 text-sm font-mono font-bold shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-mono font-bold shrink-0">
           {[['NO', '#54D7E8'], ['NO₂', '#D8F36A'], ['HNO₃', '#FF875F']].map(([t, c], i) => (
             <React.Fragment key={t}>
-              <span className="px-3 py-1.5 rounded-xl border bg-[#071521]/80" style={{ color: c, borderColor: `${c}55` }}>{t}</span>
-              {i < 2 && <ChevronRight size={14} className="text-[#A8BBC8]" />}
+              <span className="px-2.5 py-1 rounded-xl border bg-[#071521]/80" style={{ color: c, borderColor: `${c}55` }}>{t}</span>
+              {i < 2 && <ChevronRight size={13} className="text-[#A8BBC8]" />}
             </React.Fragment>
           ))}
         </div>
       </header>
 
-      {/* Mobile View (< lg) */}
-      <div className="relative z-10 my-auto flex lg:hidden flex-col gap-3 w-full">
-        {/* Thanh chọn 3 trụ cột và nút chuyển chế độ */}
-        <div className="flex items-center justify-between gap-2">
-          {/* Tab 3 trụ cột */}
-          <div className="flex-1 grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-[#050E17]/90 border border-white/10 backdrop-blur-md">
-            {CARDS.map((card, idx) => {
-              const isActive = !viewAllMobile && mobileStep === idx;
-              return (
-                <button
-                  key={card.step}
-                  type="button"
-                  onClick={() => {
-                    setViewAllMobile(false);
-                    handleSelectTab(idx);
-                  }}
-                  className={`relative py-1.5 px-1 sm:px-2 rounded-xl text-center transition-all duration-300 flex items-center justify-center gap-1.5 ${
-                    isActive
-                      ? 'text-white font-black shadow-lg'
-                      : 'text-[#A8BBC8] hover:text-white font-semibold'
-                  }`}
-                  style={{
-                    backgroundColor: isActive ? `${card.color}24` : 'transparent',
-                    border: isActive ? `1px solid ${card.color}88` : '1px solid transparent',
-                  }}
-                >
-                  <span
-                    className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black shrink-0"
-                    style={{
-                      background: isActive ? card.color : 'rgba(255,255,255,0.1)',
-                      color: isActive ? '#050E17' : '#A8BBC8',
-                    }}
-                  >
-                    {card.step}
-                  </span>
-                  <span className="text-[11px] sm:text-xs truncate">{card.title}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Nút bật/tắt xem tất cả */}
-          <button
-            type="button"
-            onClick={() => {
-              setViewAllMobile(!viewAllMobile);
-              sfx.pop?.(1.4);
-            }}
-            title={viewAllMobile ? 'Xem từng thẻ' : 'Xem cả 3 thẻ'}
-            className="px-2.5 py-2 rounded-2xl bg-[#050E17]/90 border border-white/10 text-[#A8BBC8] hover:text-white flex items-center gap-1.5 text-xs font-semibold shrink-0"
-          >
-            {viewAllMobile ? <ListFilter size={15} /> : <Layers size={15} />}
-            <span className="hidden sm:inline">{viewAllMobile ? 'Từng thẻ' : 'Tất cả'}</span>
-          </button>
-        </div>
-
-        {/* Nội dung thẻ trên mobile */}
-        {viewAllMobile ? (
-          <div className="flex flex-col gap-3.5">
-            {CARDS.map((card) => (
-              <MobilePillarCard key={card.step} card={card} />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            <MobilePillarCard card={activeCard} />
-
-            {/* Stepper điều hướng */}
-            <div className="flex items-center justify-between px-2 py-1 bg-[#050E17]/60 rounded-xl border border-white/5">
+      {/* Tab bar chọn Trụ cột & Chế độ xem */}
+      <div className="relative z-10 flex items-center justify-between gap-2.5 max-w-[1240px] mx-auto w-full">
+        {/* 3 Pills: 01, 02, 03 */}
+        <div className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-2xl bg-[#050E17]/90 border border-white/10 backdrop-blur-md shadow-md">
+          {CARDS.map((card, idx) => {
+            const isActive = !showAll && activeStep === idx;
+            return (
               <button
+                key={card.step}
                 type="button"
-                onClick={handlePrev}
-                disabled={mobileStep === 0}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed text-white hover:bg-white/10"
+                onClick={() => handleSelectTab(idx)}
+                className={`relative py-1.5 px-2.5 sm:px-3.5 rounded-xl text-center transition-all duration-300 flex items-center gap-1.5 sm:gap-2 ${
+                  isActive
+                    ? 'text-white font-black shadow-md'
+                    : 'text-[#A8BBC8] hover:text-white font-semibold'
+                }`}
+                style={{
+                  backgroundColor: isActive ? `${card.color}24` : 'transparent',
+                  border: isActive ? `1px solid ${card.color}88` : '1px solid transparent',
+                }}
               >
-                <ChevronLeft size={16} />
-                <span>Trước</span>
-              </button>
-
-              {/* Dots */}
-              <div className="flex items-center gap-2">
-                {CARDS.map((c, i) => (
-                  <button
-                    key={c.step}
-                    type="button"
-                    onClick={() => handleSelectTab(i)}
-                    className="transition-all duration-300 rounded-full"
-                    style={{
-                      width: mobileStep === i ? '20px' : '7px',
-                      height: '7px',
-                      backgroundColor: mobileStep === i ? c.color : 'rgba(255,255,255,0.25)',
-                    }}
-                    aria-label={`Đi tới Trụ cột ${c.step}`}
-                  />
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={handleNext}
-                disabled={mobileStep === CARDS.length - 1}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed text-white hover:bg-white/10"
-              >
-                <span>Tiếp theo</span>
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Desktop Cards (>= lg) */}
-      <div className="relative z-10 my-auto hidden lg:flex lg:flex-row lg:items-stretch gap-0">
-        {CARDS.map((card, idx) => (
-          <React.Fragment key={card.step}>
-            <article
-              onMouseMove={trackMouse}
-              style={{ '--d': `${160 + idx * 140}ms`, '--c': card.color }}
-              className="rm4-rise rm4-card group flex-1 min-w-0 rounded-3xl p-4 sm:p-5 flex flex-col"
-            >
-              <div aria-hidden="true"
-                className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                style={{ background: `radial-gradient(360px circle at var(--mx, 50%) var(--my, 0%), ${card.color}26, transparent 62%)` }} />
-              <div className="rm4-sheen" aria-hidden="true" />
-              <div className="absolute top-0 left-6 right-6 h-[2px] rounded-full"
-                style={{ background: `linear-gradient(90deg, transparent, ${card.color}, transparent)` }} />
-
-              {/* Ảnh minh họa */}
-              <div className="relative">
-                <Illustration step={card.step} color={card.color} />
                 <span
-                  className="absolute top-3 left-3 w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm"
-                  style={{ background: card.color, color: '#050E17', boxShadow: `0 6px 18px ${card.color}66` }}
+                  className="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0"
+                  style={{
+                    background: isActive ? card.color : 'rgba(255,255,255,0.1)',
+                    color: isActive ? '#050E17' : '#A8BBC8',
+                  }}
                 >
                   {card.step}
                 </span>
-              </div>
+                <span className="text-xs sm:text-sm whitespace-nowrap">{card.title}</span>
+              </button>
+            );
+          })}
+        </div>
 
-              {/* Tiêu đề */}
-              <div className="relative mt-4">
-                <span className="block text-xs font-semibold tracking-wide" style={{ color: card.color }}>
-                  Trụ cột {card.step} · {card.subtitle}
-                </span>
-                <h3 className="text-2xl sm:text-3xl font-black text-white leading-tight">{card.title}</h3>
-              </div>
+        {/* Nút Xem cả 3 / Xem từng trụ */}
+        <button
+          type="button"
+          onClick={() => {
+            setShowAll(!showAll);
+            sfx.pop?.(1.4);
+          }}
+          className={`px-3 py-1.5 rounded-2xl border transition-all flex items-center gap-1.5 text-xs sm:text-sm font-semibold shrink-0 ${
+            showAll
+              ? 'bg-[#54D7E8]/20 border-[#54D7E8] text-white shadow-[0_0_12px_rgba(84,215,232,0.3)]'
+              : 'bg-[#050E17]/90 border-white/10 text-[#A8BBC8] hover:text-white'
+          }`}
+        >
+          {showAll ? <ListFilter size={15} /> : <Layers size={15} />}
+          <span>{showAll ? 'Xem từng trụ' : 'Xem cả 3'}</span>
+        </button>
+      </div>
 
-              {/* Câu hỏi */}
-              <p className="relative mt-3 pl-4 py-1 border-l-[3px] rounded-r-lg text-base sm:text-lg font-bold text-white leading-snug"
-                style={{ borderColor: card.color, background: `linear-gradient(90deg, ${card.color}1A, transparent)` }}>
-                {card.question}
-              </p>
+      {/* Khu vực nội dung thẻ */}
+      <div className="relative z-10 my-auto w-full">
+        {showAll ? (
+          /* Chế độ xem cả 3 thẻ: 3 cột ngang trên màn hình rộng / xếp dọc trên màn hình hẹp */
+          <div className="flex flex-col lg:flex-row lg:items-stretch gap-3.5 lg:gap-0 max-w-[1240px] mx-auto w-full">
+            {CARDS.map((card, idx) => (
+              <React.Fragment key={card.step}>
+                <article
+                  onMouseMove={trackMouse}
+                  style={{ '--d': `${160 + idx * 140}ms`, '--c': card.color }}
+                  className="rm4-rise rm4-card group flex-1 min-w-0 rounded-2xl xl:rounded-3xl p-3 xl:p-4 flex flex-col justify-between"
+                >
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 rounded-2xl xl:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                    style={{ background: `radial-gradient(360px circle at var(--mx, 50%) var(--my, 0%), ${card.color}26, transparent 62%)` }}
+                  />
+                  <div className="rm4-sheen" aria-hidden="true" />
+                  <div
+                    className="absolute top-0 left-6 right-6 h-[2px] rounded-full"
+                    style={{ background: `linear-gradient(90deg, transparent, ${card.color}, transparent)` }}
+                  />
 
-              {/* Checklist */}
-              <ul className="relative mt-4 space-y-2.5 text-xs sm:text-sm text-[#DCE6F0]">
-                {card.details.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2.5 leading-snug">
-                    <CheckCircle2 size={16} className="mt-0.5 shrink-0" style={{ color: card.color }} />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {/* Phương trình */}
-              <div className="relative mt-auto pt-4">
-                <div className="border-t border-white/10 pt-3">
-                  <span className="block text-xs text-[#A8BBC8] mb-1.5">Phương trình hóa học tiêu biểu</span>
-                  <div className="rounded-xl px-3 py-2.5 bg-[#050E17]/90 border font-mono font-bold text-xs sm:text-[13px] leading-relaxed flex flex-wrap items-center gap-x-2.5 gap-y-1"
-                    style={{ borderColor: `${card.color}55`, boxShadow: `inset 0 0 20px ${card.color}14` }}>
-                    <span className="text-white">{card.eq.left}</span>
-                    <span className="w-5 h-5 rounded-full inline-flex items-center justify-center text-[11px]"
-                      style={{ background: `${card.color}26`, color: card.color }}>→</span>
-                    <span style={{ color: card.color }}>{card.eq.right}</span>
+                  {/* Ảnh minh họa */}
+                  <div className="relative max-w-[280px] mx-auto w-full">
+                    <div className="w-full aspect-[240/132] max-h-[135px] flex items-center justify-center">
+                      <Illustration step={card.step} color={card.color} />
+                    </div>
+                    <span
+                      className="absolute top-2 left-2 w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs"
+                      style={{ background: card.color, color: '#050E17', boxShadow: `0 4px 12px ${card.color}66` }}
+                    >
+                      {card.step}
+                    </span>
                   </div>
-                </div>
-              </div>
-            </article>
 
-            {idx < CARDS.length - 1 && (
-              <Connector from={card.color} to={CARDS[idx + 1].color} delay={420 + idx * 140} />
-            )}
-          </React.Fragment>
-        ))}
+                  {/* Tiêu đề */}
+                  <div className="relative mt-2">
+                    <span className="block text-[11px] font-semibold tracking-wide" style={{ color: card.color }}>
+                      Trụ cột {card.step} · {card.subtitle}
+                    </span>
+                    <h3 className="text-lg xl:text-xl font-black text-white leading-tight">{card.title}</h3>
+                  </div>
+
+                  {/* Câu hỏi */}
+                  <p
+                    className="relative mt-1.5 pl-2.5 py-0.5 border-l-[3px] rounded-r-lg text-xs xl:text-sm font-bold text-white leading-snug"
+                    style={{ borderColor: card.color, background: `linear-gradient(90deg, ${card.color}1A, transparent)` }}
+                  >
+                    {card.question}
+                  </p>
+
+                  {/* Checklist */}
+                  <ul className="relative mt-2 space-y-1 xl:space-y-1.5 text-[11px] xl:text-xs text-[#DCE6F0]">
+                    {card.details.map((item, i) => (
+                      <li key={i} className="flex items-start gap-1.5 leading-snug">
+                        <CheckCircle2 size={14} className="mt-0.5 shrink-0" style={{ color: card.color }} />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Phương trình */}
+                  <div className="relative mt-auto pt-2.5">
+                    <div className="border-t border-white/10 pt-2">
+                      <span className="block text-[10px] text-[#A8BBC8] mb-1">Phương trình hóa học tiêu biểu</span>
+                      <div
+                        className="rounded-xl px-2 py-1.5 bg-[#050E17]/90 border font-mono font-bold text-[11px] xl:text-xs leading-relaxed flex flex-wrap items-center gap-x-1.5 gap-y-0.5"
+                        style={{ borderColor: `${card.color}55`, boxShadow: `inset 0 0 20px ${card.color}14` }}
+                      >
+                        <span className="text-white">{card.eq.left}</span>
+                        <span
+                          className="w-3.5 h-3.5 rounded-full inline-flex items-center justify-center text-[9px]"
+                          style={{ background: `${card.color}26`, color: card.color }}
+                        >
+                          →
+                        </span>
+                        <span style={{ color: card.color }}>{card.eq.right}</span>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+
+                {idx < CARDS.length - 1 && (
+                  <Connector from={card.color} to={CARDS[idx + 1].color} delay={420 + idx * 140} />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        ) : (
+          /* Chế độ xem từng Trụ cột: layout 2 cột cân xứng hoàn hảo, hiển thị đầy đủ không bị tràn màn hình */
+          <SinglePillarCard
+            card={activeCard}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            isFirst={activeStep === 0}
+            isLast={activeStep === CARDS.length - 1}
+            stepIndex={activeStep}
+            totalSteps={CARDS.length}
+            onSelectStep={(i) => {
+              setActiveStep(i);
+              sfx.pop?.(1 + i * 0.15);
+            }}
+          />
+        )}
       </div>
 
       {/* Phương pháp 4 bước */}
-      <div className="relative z-10 rm4-rise rm4-card rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4" style={{ '--d': '640ms', '--c': '#54D7E8' }}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="relative z-10 rm4-rise rm4-card rounded-2xl px-4 sm:px-6 py-2.5 sm:py-3 max-w-[1240px] mx-auto w-full" style={{ '--d': '640ms', '--c': '#54D7E8' }}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
           <span className="text-xs sm:text-sm font-bold text-[#54D7E8] tracking-wide shrink-0">Phương pháp tiếp cận 4 bước</span>
           <ol className="flex-1 grid grid-cols-2 md:flex md:flex-nowrap items-center justify-between gap-2">
             {METHOD.map((m, i) => {
               const Icon = m.icon;
               return (
                 <React.Fragment key={m.label}>
-                  <li className="flex items-center gap-2 bg-[#071521]/85 px-2.5 py-1.5 sm:px-3 rounded-xl border border-[#29485A]/80">
-                    <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-[#54D7E8]/15 text-[#54D7E8] flex items-center justify-center font-mono text-[11px] sm:text-xs font-bold shrink-0">{i + 1}</span>
-                    <Icon size={14} className="text-[#D8F36A] shrink-0" />
+                  <li className="flex items-center gap-2 bg-[#071521]/85 px-2.5 py-1 sm:px-3 rounded-xl border border-[#29485A]/80">
+                    <span className="w-5 h-5 rounded-lg bg-[#54D7E8]/15 text-[#54D7E8] flex items-center justify-center font-mono text-[11px] font-bold shrink-0">{i + 1}</span>
+                    <Icon size={13} className="text-[#D8F36A] shrink-0" />
                     <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-white whitespace-nowrap truncate">{m.label}</span>
                   </li>
                   {i < METHOD.length - 1 && (
-                    <span aria-hidden="true" className="hidden md:block flex-1 h-px min-w-3"
+                    <span aria-hidden="true" className="hidden md:block flex-1 h-px min-w-2"
                       style={{ background: 'linear-gradient(90deg,#54D7E8,#D8F36A)', opacity: 0.55 }} />
                   )}
                 </React.Fragment>
