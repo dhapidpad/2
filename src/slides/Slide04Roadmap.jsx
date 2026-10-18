@@ -667,27 +667,91 @@ export default function Slide04Roadmap() {
       </div>
 
       {/* Phương pháp 4 bước */}
-      <div className="relative z-10 rm4-rise rm4-card rounded-2xl px-4 sm:px-6 py-2.5 sm:py-3 max-w-[1240px] mx-auto w-full" style={{ '--d': '640ms', '--c': '#54D7E8' }}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
-          <span className="text-xs sm:text-sm font-bold text-[#54D7E8] tracking-wide shrink-0">Phương pháp tiếp cận 4 bước</span>
-          <ol className="flex-1 grid grid-cols-2 md:flex md:flex-nowrap items-center justify-between gap-2">
+      <div
+        className="relative z-10 rm4-rise rounded-2xl p-2.5 sm:p-3 max-w-[1240px] mx-auto w-full backdrop-blur-md border shadow-xl"
+        style={{
+          '--d': '640ms',
+          background: 'linear-gradient(135deg, rgba(7, 22, 36, 0.95), rgba(9, 29, 46, 0.85))',
+          borderColor: 'rgba(84, 215, 232, 0.25)',
+          boxShadow: '0 8px 32px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+        }}
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-3">
+          {/* Nhãn tiêu đề phương pháp */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span
+              className="w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs shrink-0"
+              style={{
+                background: 'linear-gradient(135deg, rgba(84,215,232,0.25), rgba(216,243,106,0.15))',
+                color: '#54D7E8',
+                border: '1px solid rgba(84,215,232,0.4)',
+              }}
+            >
+              <Layers size={14} />
+            </span>
+            <div>
+              <span className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#54D7E8] via-[#D8F36A] to-white">
+                Phương pháp 4 bước
+              </span>
+              <span className="text-[10px] text-[#A8BBC8] leading-tight block">
+                Quy trình nghiên cứu khoa học
+              </span>
+            </div>
+          </div>
+
+          {/* 4 Thẻ quy trình nối tiếp */}
+          <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-2">
             {METHOD.map((m, i) => {
               const Icon = m.icon;
+              const colors = ['#54D7E8', '#4AE3B5', '#D8F36A', '#FF875F'];
+              const color = colors[i];
               return (
-                <React.Fragment key={m.label}>
-                  <li className="flex items-center gap-2 bg-[#071521]/85 px-2.5 py-1 sm:px-3 rounded-xl border border-[#29485A]/80">
-                    <span className="w-5 h-5 rounded-lg bg-[#54D7E8]/15 text-[#54D7E8] flex items-center justify-center font-mono text-[11px] font-bold shrink-0">{i + 1}</span>
-                    <Icon size={13} className="text-[#D8F36A] shrink-0" />
-                    <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-white whitespace-nowrap truncate">{m.label}</span>
-                  </li>
+                <div
+                  key={m.label}
+                  className="group relative flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border transition-all duration-300 hover:scale-[1.02]"
+                  style={{
+                    background: 'linear-gradient(165deg, rgba(5, 14, 23, 0.9), rgba(11, 28, 42, 0.7))',
+                    borderColor: `${color}35`,
+                    boxShadow: `inset 0 0 14px ${color}0D`,
+                  }}
+                >
+                  {/* Đường sáng viền trên của từng thẻ */}
+                  <div
+                    className="absolute top-0 left-3 right-3 h-[1.5px] rounded-full opacity-60 group-hover:opacity-100 transition-opacity"
+                    style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
+                  />
+
+                  {/* Số bước 01..04 */}
+                  <span
+                    className="w-5 h-5 rounded-lg flex items-center justify-center font-mono text-[10.5px] font-black shrink-0"
+                    style={{
+                      background: `${color}22`,
+                      color: color,
+                      border: `1px solid ${color}55`,
+                    }}
+                  >
+                    0{i + 1}
+                  </span>
+
+                  {/* Icon */}
+                  <Icon size={14} className="shrink-0" style={{ color: color }} />
+
+                  {/* Tên bước */}
+                  <span className="text-[11px] sm:text-xs font-bold text-white whitespace-nowrap truncate leading-tight flex-1">
+                    {m.label}
+                  </span>
+
+                  {/* Mũi tên liên kết giữa các bước */}
                   {i < METHOD.length - 1 && (
-                    <span aria-hidden="true" className="hidden md:block flex-1 h-px min-w-2"
-                      style={{ background: 'linear-gradient(90deg,#54D7E8,#D8F36A)', opacity: 0.55 }} />
+                    <ChevronRight
+                      size={13}
+                      className="hidden xl:block text-white/20 shrink-0 group-hover:text-white/60 transition-colors -mr-0.5"
+                    />
                   )}
-                </React.Fragment>
+                </div>
               );
             })}
-          </ol>
+          </div>
         </div>
       </div>
     </div>
