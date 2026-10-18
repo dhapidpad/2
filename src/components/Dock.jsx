@@ -3,7 +3,6 @@ import {
   ChevronLeft,
   ChevronRight,
   BookOpen,
-  List,
   Volume2,
   VolumeX,
   Maximize,
@@ -32,8 +31,6 @@ export default function Dock({
   goToSlide,
   isNotesOpen,
   onToggleNotes,
-  isGridOpen,
-  onToggleGrid,
   isFullscreen,
   toggleFullscreen,
   isPresentMode,
@@ -101,22 +98,14 @@ export default function Dock({
             <ChevronLeft size={20} className="text-[#54D7E8]" />
           </button>
 
-          {/* Central TOC trigger with current slide */}
-          <button
-            onClick={() => {
-              sfx.tick();
-              onToggleGrid();
-            }}
-            aria-label="Mở mục lục slide"
-            className="flex-1 h-11 px-3 flex items-center justify-center gap-1.5 rounded-xl bg-[#091B2A] border border-[#1E3A4D] text-xs font-semibold active:bg-[#0D2234] truncate"
-          >
+          {/* Current slide indicator */}
+          <div className="flex-1 h-11 px-3 flex items-center justify-center gap-1.5 rounded-xl bg-[#091B2A] border border-[#1E3A4D] text-xs font-semibold truncate">
             <span className="font-mono text-[#54D7E8] font-bold shrink-0">
               {currentMeta.num || currentSlide}/{totalSlides}
             </span>
             <span className="text-[#6E8A9E]">•</span>
             <span className="truncate text-[#DCE6F0]">{currentMeta.shortTitle || currentMeta.title}</span>
-            <span className="text-xs text-[#54D7E8]">▾</span>
-          </button>
+          </div>
 
           {/* Next */}
           <button
@@ -258,25 +247,6 @@ export default function Dock({
               <BookOpen size={14} />
               <span className="hidden sm:inline">Kịch bản</span>
               <kbd className="hidden lg:inline text-xs text-[#6E8A9E] font-mono">N</kbd>
-            </button>
-
-            {/* TOC button (G) */}
-            <button
-              onClick={() => {
-                sfx.tick();
-                onToggleGrid();
-              }}
-              aria-label="Mục lục bài giảng (Phím G)"
-              title="Mục lục bài giảng (G)"
-              className={`h-8 px-2.5 flex items-center gap-1.5 rounded-lg border text-xs font-medium transition-all ${
-                isGridOpen
-                  ? 'bg-[#54D7E8]/15 border-[#54D7E8] text-[#54D7E8]'
-                  : 'bg-[#0D2234] border-[#1E3A4D] text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#143245]'
-              }`}
-            >
-              <List size={14} />
-              <span className="hidden sm:inline">Mục lục</span>
-              <kbd className="hidden lg:inline text-xs text-[#6E8A9E] font-mono">G</kbd>
             </button>
 
             {/* Audio toggle */}

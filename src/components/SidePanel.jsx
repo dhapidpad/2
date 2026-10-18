@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   BookOpen,
-  List,
   Settings,
   Copy,
   Check,
   AlertTriangle,
   ArrowRight,
-  Search,
   Volume2,
   VolumeX,
   Sparkles,
@@ -28,16 +26,6 @@ import { slideNotes } from '../data/slideNotes';
 import { SLIDES_REGISTRY, TOTAL_SLIDES } from '../config/slides';
 import { sfx } from '../audio/sfx';
 
-// Remove Vietnamese accents for fast fuzzy search
-function normalizeVN(str = '') {
-  return str
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd')
-    .replace(/Đ/g, 'D')
-    .toLowerCase();
-}
-
 /**
  * SidePanel Component
  * Clean, modern presenter panel with collapsible mini mode and streamlined notes
@@ -45,7 +33,7 @@ function normalizeVN(str = '') {
 export default function SidePanel({
   isOpen = false,
   isClosing = false,
-  activeTab = 'notes', // 'notes' | 'toc' | 'settings'
+  activeTab = 'notes', // 'notes' | 'settings'
   onSelectTab,
   onClose,
   isCompact = false,
@@ -73,13 +61,14 @@ export default function SidePanel({
   laserMode = null,
   toggleLaser,
   onReplay,
+  isPhone = false,
+  fitMode = 'readable',
+  onChangeFitMode,
 }) {
   const [copiedTransition, setCopiedTransition] = useState(false);
   const [copiedScript, setCopiedScript] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [scriptFontSize, setScriptFontSize] = useState(13.5);
   const [isScriptExpanded, setIsScriptExpanded] = useState(true);
-  const tocListRef = useRef(null);
 
   const currentNote = slideNotes[currentSlide] || {};
   const currentMeta = SLIDES_REGISTRY[currentSlide - 1] || {};
@@ -100,28 +89,6 @@ export default function SidePanel({
     setCopiedScript(true);
     setTimeout(() => setCopiedScript(false), 1800);
   };
-
-  // Scroll current slide into view in TOC
-  useEffect(() => {
-    if (activeTab === 'toc' && tocListRef.current) {
-      const activeEl = tocListRef.current.querySelector(`[data-toc-id="${currentSlide}"]`);
-      if (activeEl) {
-        activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }
-    }
-  }, [activeTab, currentSlide]);
-
-  // Filter TOC by query
-  const filteredSlides = useMemo(() => {
-    if (!searchQuery.trim()) return SLIDES_REGISTRY;
-    const q = normalizeVN(searchQuery);
-    return SLIDES_REGISTRY.filter((s) => {
-      const titleMatch = normalizeVN(s.title).includes(q);
-      const sectionMatch = normalizeVN(s.section).includes(q);
-      const speakerMatch = normalizeVN(s.speaker).includes(q);
-      return titleMatch || sectionMatch || speakerMatch;
-    });
-  }, [searchQuery]);
 
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60);
@@ -242,22 +209,6 @@ export default function SidePanel({
           <button
             onClick={() => {
               sfx.tick();
-              onSelectTab('toc');
-              onToggleCompact && onToggleCompact();
-            }}
-            title="Mục lục bài giảng (G)"
-            className={`w-9 h-9 flex items-center justify-center rounded-xl border transition-all active:scale-95 ${
-              activeTab === 'toc'
-                ? 'bg-[#54D7E8]/20 border-[#54D7E8] text-[#54D7E8]'
-                : 'bg-[#0D2234] border-[#1E3A4D] text-[#94A3B8] hover:text-white'
-            }`}
-          >
-            <List size={16} />
-          </button>
-
-          <button
-            onClick={() => {
-              sfx.tick();
               onSelectTab('settings');
               onToggleCompact && onToggleCompact();
             }}
@@ -295,7 +246,7 @@ export default function SidePanel({
       data-state={isClosing ? 'closing' : 'open'}
       data-anim={animKind}
       role="complementary"
-      aria-label="Kịch bản và mục lục"
+      aria-label="Kịch bản thuyết trình"
       className="h-full bg-[#081724]/95 border-l border-[#1E3A4D] flex flex-col text-[#F8FAFC] select-none relative backdrop-blur-md z-30"
       style={{
         width: layoutMode === 'canvas' ? `${panelWidth}px` : '100%',
@@ -341,7 +292,7 @@ export default function SidePanel({
       )}
 
       {/* Desktop Resize Drag Bar */}
-      {layoutMode === 'canvas' && (
+      {layoutMode === 'canvas' && !isPhone && (
         <div
           role="separator"
           aria-orientation="vertical"
@@ -402,23 +353,6 @@ export default function SidePanel({
 
           <button
             role="tab"
-            aria-selected={activeTab === 'toc'}
-            onClick={() => {
-              sfx.tick();
-              onSelectTab('toc');
-            }}
-            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold transition-all ${
-              activeTab === 'toc'
-                ? 'bg-[#54D7E8]/15 text-[#54D7E8] border border-[#54D7E8]/40 shadow-sm'
-                : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#0D2234]'
-            }`}
-          >
-            <List size={13} />
-            <span>Mục lục</span>
-          </button>
-
-          <button
-            role="tab"
             aria-selected={activeTab === 'settings'}
             onClick={() => {
               sfx.tick();
@@ -437,7 +371,7 @@ export default function SidePanel({
 
         <div className="flex items-center gap-0.5">
           {/* Quick Width Presets */}
-          {layoutMode === 'canvas' && onResizeWidth && (
+          {layoutMode === 'canvas' && !isPhone && onResizeWidth && (
             <div className="hidden sm:flex items-center border border-[#1E3A4D] rounded-md overflow-hidden mr-1">
               <button
                 onClick={() => {
@@ -470,7 +404,7 @@ export default function SidePanel({
             </div>
           )}
 
-          {layoutMode === 'canvas' && onToggleCompact && (
+          {layoutMode === 'canvas' && !isPhone && onToggleCompact && (
             <button
               onClick={() => {
                 sfx.tick();
@@ -656,77 +590,6 @@ export default function SidePanel({
         </div>
       )}
 
-      {/* TAB CONTENT 2: MỤC LỤC (TOC) */}
-      {activeTab === 'toc' && (
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* Search box */}
-          <div className="px-2.5 py-1.5 border-b border-[#1E3A4D] bg-[#050E17]/60 shrink-0">
-            <div className="relative flex items-center">
-              <Search size={12} className="absolute left-2.5 text-[#94A3B8] pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Tìm kiếm slide..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-7 pr-6 py-1 bg-[#0D2234] border border-[#1E3A4D] rounded-md text-[11px] text-[#F8FAFC] placeholder-[#6E8A9E] focus:outline-none focus:border-[#54D7E8]"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2 text-xs text-[#94A3B8] hover:text-white"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Slide items list */}
-          <div ref={tocListRef} className="flex-1 overflow-y-auto px-2 py-1.5 space-y-0.5 custom-scrollbar">
-            {filteredSlides.map((s) => {
-              const isActive = s.id === currentSlide;
-              return (
-                <button
-                  key={s.id}
-                  data-toc-id={s.id}
-                  onClick={() => {
-                    sfx.pop();
-                    goToSlide(s.id);
-                  }}
-                  className={`w-full text-left p-1.5 rounded-lg transition-all flex items-start gap-2 border ${
-                    isActive
-                      ? 'bg-[#54D7E8]/15 border-[#54D7E8]/60 shadow-sm'
-                      : 'bg-transparent border-transparent hover:bg-[#0D2234]/70 hover:border-[#1E3A4D]'
-                  }`}
-                >
-                  <span
-                    className={`font-mono text-[10.5px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
-                      isActive ? 'bg-[#54D7E8] text-[#050E17]' : 'bg-[#0D2234] text-[#94A3B8]'
-                    }`}
-                  >
-                    {s.num}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div
-                      className={`text-[11.5px] font-semibold truncate ${
-                        isActive ? 'text-[#54D7E8]' : 'text-white'
-                      }`}
-                    >
-                      {s.title}
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[10px] text-[#94A3B8] mt-0.5">
-                      <span className="truncate">{s.speaker?.split('(')[0] || 'Nhóm'}</span>
-                      <span className="text-[#6E8A9E]">•</span>
-                      <span className="font-mono">{s.duration}</span>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {/* TAB CONTENT 3: CÀI ĐẶT & CÔNG CỤ (SETTINGS & TOOLS) */}
       {activeTab === 'settings' && (
         <div className="flex-1 overflow-y-auto px-3.5 py-3 space-y-4 text-xs custom-scrollbar">
@@ -876,10 +739,37 @@ export default function SidePanel({
           </div>
 
           {/* Panel Position Toggle (Desktop) */}
+          {isPhone && onChangeFitMode && (
+            <div className="space-y-2 pt-1 border-t border-[#1E3A4D]">
+              <div className="font-bold text-white uppercase tracking-wider text-[11px]">
+                Cỡ hiển thị slide
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {[
+                  { id: 'readable', label: 'Chữ lớn', desc: 'Dễ đọc, vuốt dọc để xem hết' },
+                  { id: 'fit', label: 'Vừa khung', desc: 'Thu nhỏ để thấy cả slide' },
+                ].map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => onChangeFitMode(m.id)}
+                    className={`p-2 rounded-xl border text-left flex flex-col gap-0.5 transition-all ${
+                      fitMode === m.id
+                        ? 'bg-[#54D7E8]/15 border-[#54D7E8] text-[#54D7E8]'
+                        : 'bg-[#0D2234]/60 border-[#1E3A4D] text-[#94A3B8] hover:border-[#54D7E8]/40'
+                    }`}
+                  >
+                    <span className="font-bold text-xs">{m.label}</span>
+                    <span className="text-[10px] opacity-80 leading-tight">{m.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {layoutMode === 'canvas' && (
             <div className="space-y-2 pt-1 border-t border-[#1E3A4D]">
               <div className="font-bold text-white uppercase tracking-wider text-[11px]">
-                Vị trí Side Panel
+                {isPhone ? 'Vị trí thanh điều khiển' : 'Vị trí Side Panel'}
               </div>
               <div className="flex gap-2">
                 <button

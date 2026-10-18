@@ -67,7 +67,7 @@ function DryIcon() {
 
 export default function Slide05Definition() {
   return (
-    <div className="w-full min-h-full flex flex-col justify-between py-1 gap-4 relative">
+    <div className="s5-root w-full min-h-full flex flex-col justify-between py-1 gap-4 relative">
 
       {/* Ambient */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">

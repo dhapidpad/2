@@ -73,3 +73,13 @@ npm run build
 ## 👥 CÁCH ĐỔI TÊN 9 THÀNH VIÊN NHÓM
 
 Mở file [`src/data/teamMembers.js`](src/data/teamMembers.js) và chỉnh sửa thông tin lớp, ngày thuyết trình cùng họ tên 9 thành viên trong mảng `teamMembers`. Toàn bộ Slide 01, Slide 03, Slide 21 và hộp kịch bản thuyết trình sẽ tự động cập nhật đồng bộ.
+
+## Hệ bố cục tự động (v2)
+
+| Thành phần | Việc làm |
+|---|---|
+| `src/hooks/useLayoutMode.js` | Chọn `canvas` (ngang/vuông) hoặc `reflow` (dọc/hẹp) theo kích thước **cửa sổ**, có vùng đệm 0.95–1.05 chống chớp; trả thêm `device` (phone/tablet/desktop), `orientation`, `isTouch`. Đo lại sau khi xoay màn hình (120ms, 360ms). |
+| `src/utils/stageGeometry.js` | Hình học canvas (hàm thuần, test được): nới canvas theo chiều ngang (≤1920) **và chiều dọc (≤900)** để màn 16:10 / 4:3 không còn dải đen; slide dài thì co tới ngưỡng đọc được rồi mới cuộn. |
+| `src/components/FitStage.jsx` | `ReflowStage`: cuộn về đầu khi đổi slide, vạch tiến độ cuộn, vệt mờ báo còn nội dung, gợi ý xoay ngang (nhớ trong phiên; Android có nút khóa ngang). |
+| `src/styles/index.css` | Cỡ chữ lưu động của reflow (rem theo bề rộng), vùng an toàn `env(safe-area-inset-*)`, chống iOS tự phóng chữ khi xoay, bỏ hover dính trên cảm ứng. |
+| `src/App.jsx` | Gắn `data-layout`/`data-device` lên `<html>`, `data-device`/`data-orient` lên `#app-root`; `--dock-h` đã cộng vùng an toàn đáy. |

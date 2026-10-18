@@ -1,10 +1,7 @@
 import React, { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react';
+import { BASE_W, BASE_H, computeCanvasWidth, computeCanvasGeometry } from '../utils/stageGeometry';
 
-const BASE_W = 1280;
-const BASE_H = 720;
-// Dưới ngưỡng này chữ sẽ quá nhỏ để đọc -> giữ cỡ chữ và cho cuộn dọc thay vì thu nhỏ thêm.
-const MIN_READABLE_SCALE = 0.58;
-const MAX_SCALE = 3;
+const HINT_KEY = 'acid_rotate_hint_dismissed';
 
 /**
  * FitStage Component (GEMINI_FULL_SPEC_ACID_V4 §10)
@@ -21,11 +18,19 @@ export default function FitStage({
   stageWidth = BASE_W,
   stageHeight = BASE_H,
   currentSlide = 1,
+  isPhone = false,
+  readable = false,
+  device = 'desktop',
+  isTouch = false,
   className = '',
 }) {
   const contentRef = useRef(null);
   const scrollRef = useRef(null);
   const [naturalHeight, setNaturalHeight] = useState(BASE_H);
+  const phoneReadable = isPhone && readable;
+
+  // Chiều rộng canvas logic: lấp đầy khung theo tỉ lệ scale theo chiều cao (không phụ thuộc chiều cao đo được => không dao động)
+  const canvasW = computeCanvasWidth(stageWidth, stageHeight, phoneReadable);
 
   /**
    * Đo chiều cao tự nhiên của slide: tạm thu container về 0px để mọi `min-h-full`
@@ -90,7 +95,7 @@ export default function FitStage({
       window.removeEventListener('resize', onWinResize);
       clearTimeout(resizeTimer);
     };
-  }, [layoutMode, currentSlide, measure]);
+  }, [layoutMode, currentSlide, measure, canvasW]);
 
   // Slide mới luôn bắt đầu từ đầu trang
   useEffect(() => {
@@ -99,50 +104,27 @@ export default function FitStage({
 
   if (layoutMode === 'reflow') {
     return (
-      <div
-        className="w-full h-full overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain relative z-10"
-        style={{
-          WebkitOverflowScrolling: 'touch',
-        }}
+      <ReflowStage
+        currentSlide={currentSlide}
+        stageWidth={stageWidth}
+        stageHeight={stageHeight}
+        device={device}
+        isTouch={isTouch}
+        className={className}
       >
-        <div className="w-full min-h-full flex flex-col">
-          {/* Chỉ nhắc xoay ngang khi điện thoại đang dựng dọc */}
-          {stageHeight >= stageWidth && (
-            <div className="w-full max-w-md mx-auto px-3 pt-2 shrink-0">
-              <div className="py-1.5 px-3 rounded-full bg-[#54D7E8]/10 border border-[#54D7E8]/30 text-[#54D7E8] text-[11px] font-semibold flex items-center justify-center gap-1.5 shadow-sm">
-                <span>📱 Xoay ngang màn hình để xem chuẩn như máy tính</span>
-                <span className="text-[#D8F36A] font-bold">↺</span>
-              </div>
-            </div>
-          )}
-
-          <div
-            data-canvas="reflow"
-            className={`w-full flex-1 px-2 sm:px-4 py-2 flex flex-col justify-start gap-3 ${className}`}
-          >
-            {children}
-          </div>
-        </div>
-      </div>
+        {children}
+      </ReflowStage>
     );
   }
 
-  // Canvas Mode calculation (§10.3)
-  const effectiveH = Math.max(BASE_H, naturalHeight);
-  const widthScale = stageWidth / BASE_W;
-  const fitScale = Math.min(widthScale, stageHeight / effectiveH);
-  // Sàn: slide chuẩn 16:9 luôn vừa khung; slide dài hơn thì co tối đa tới ngưỡng đọc được rồi mới cuộn.
-  const floorScale = Math.min(widthScale, stageHeight / BASE_H, MIN_READABLE_SCALE);
-  const rawScale = Math.min(MAX_SCALE, Math.max(fitScale, floorScale));
-  // Round scale to multiples of 0.005 to reduce subpixel blur
-  const scale = Math.max(0.2, Math.floor(rawScale / 0.005) * 0.005);
-
-  const scaledH = effectiveH * scale;
-  const needsScroll = scaledH > stageHeight + 1;
-
-  // Integer pixel offsets for centering
-  const x = Math.round((stageWidth - BASE_W * scale) / 2);
-  const y = needsScroll ? 0 : Math.max(0, Math.round((stageHeight - scaledH) / 2));
+  // Canvas Mode calculation (§10.3) — hình học nằm ở utils/stageGeometry.js
+  const { scale, canvasH, scaledH, needsScroll, x, y } = computeCanvasGeometry({
+    stageWidth,
+    stageHeight,
+    canvasW,
+    naturalHeight,
+    phoneReadable,
+  });
 
   return (
     <div
@@ -158,9 +140,9 @@ export default function FitStage({
           data-canvas="true"
           className={`pointer-events-auto absolute top-0 left-0 origin-top-left flex flex-col justify-between ${className}`}
           style={{
-            width: `${BASE_W}px`,
+            width: `${canvasW}px`,
             minHeight: `${BASE_H}px`,
-            height: `${effectiveH}px`,
+            height: `${canvasH}px`,
             overflow: 'clip',
             transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})`,
             transformOrigin: '0 0',
@@ -169,6 +151,160 @@ export default function FitStage({
           {children}
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * ReflowStage — chế độ cột đơn cho điện thoại/tablet dọc và cửa sổ hẹp.
+ *  - Slide mới luôn cuộn về đầu (bản cũ quên làm ở reflow).
+ *  - Vạch tiến độ cuộn ở mép trên + vệt mờ ở mép dưới báo "còn nội dung phía dưới".
+ *  - Gợi ý xoay ngang: chỉ hiện trên thiết bị cảm ứng đang dựng dọc, đóng được và nhớ trong phiên.
+ *    Android Chrome có nút "Xoay ngang" (toàn màn hình + khóa hướng); iOS chỉ hiện lời nhắc.
+ *  - Màn dọc rất rộng (iPad Pro, màn xoay dọc): giới hạn bề rộng nội dung để dòng chữ không quá dài.
+ */
+function ReflowStage({ children, className = '', currentSlide, stageWidth, stageHeight, device, isTouch }) {
+  const scrollRef = useRef(null);
+  const innerRef = useRef(null);
+  const barRef = useRef(null);
+  const fadeRef = useRef(null);
+  const rafRef = useRef(0);
+  const [hintDismissed, setHintDismissed] = useState(() => {
+    try {
+      return sessionStorage.getItem(HINT_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  const portrait = stageHeight >= stageWidth;
+  const showHint = !hintDismissed && portrait && isTouch && device !== 'desktop';
+  const canLock =
+    typeof screen !== 'undefined' &&
+    !!(screen.orientation && screen.orientation.lock) &&
+    typeof document !== 'undefined' &&
+    document.fullscreenEnabled !== false;
+
+  const updateIndicators = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const max = el.scrollHeight - el.clientHeight;
+    const hasScroll = max > 1;
+    const p = hasScroll ? Math.min(1, Math.max(0, el.scrollTop / max)) : 0;
+    if (barRef.current) {
+      barRef.current.style.transform = `scaleX(${p})`;
+      barRef.current.style.opacity = hasScroll ? '1' : '0';
+    }
+    if (fadeRef.current) fadeRef.current.style.opacity = hasScroll && max - el.scrollTop > 24 ? '1' : '0';
+  }, []);
+
+  const onScroll = useCallback(() => {
+    cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(updateIndicators);
+  }, [updateIndicators]);
+
+  // Slide mới luôn bắt đầu từ đầu trang
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    updateIndicators();
+  }, [currentSlide, updateIndicators]);
+
+  // Nội dung đổi chiều cao (ảnh/font tải xong, xoay màn hình) -> cập nhật chỉ báo
+  useEffect(() => {
+    const inner = innerRef.current;
+    if (!inner || typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(onScroll);
+    ro.observe(inner);
+    if (scrollRef.current) ro.observe(scrollRef.current);
+    return () => {
+      ro.disconnect();
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [onScroll]);
+
+  const dismissHint = () => {
+    setHintDismissed(true);
+    try {
+      sessionStorage.setItem(HINT_KEY, '1');
+    } catch {}
+  };
+
+  const tryLandscape = async () => {
+    try {
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      }
+      await screen.orientation.lock('landscape');
+    } catch {}
+  };
+
+  return (
+    <div className="relative w-full h-full">
+      <div
+        ref={scrollRef}
+        onScroll={onScroll}
+        data-reflow-scroll
+        className="absolute inset-0 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain z-10"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        <div ref={innerRef} className="w-full min-h-full flex flex-col mx-auto" style={{ maxWidth: '1100px' }}>
+          {showHint && (
+            <div className="w-full max-w-md mx-auto px-3 pt-2 shrink-0">
+              <div
+                role="note"
+                className="py-1.5 pl-3 pr-1.5 rounded-full bg-[#54D7E8]/10 border border-[#54D7E8]/30 text-[#54D7E8] text-[11px] font-semibold flex items-center justify-between gap-2 shadow-sm"
+              >
+                <span className="flex items-center gap-1.5 min-w-0">
+                  <span aria-hidden="true">📱</span>
+                  <span className="truncate">Xoay ngang để xem chuẩn như máy tính</span>
+                </span>
+                <span className="flex items-center gap-1 shrink-0">
+                  {canLock && (
+                    <button
+                      type="button"
+                      onClick={tryLandscape}
+                      className="px-2.5 h-7 rounded-full bg-[#54D7E8] text-[#050E17] font-bold active:scale-95 transition-transform"
+                    >
+                      Xoay ngang
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={dismissHint}
+                    aria-label="Đóng gợi ý"
+                    className="w-7 h-7 flex items-center justify-center rounded-full text-[#94A3B8] active:scale-90 transition-transform"
+                  >
+                    ✕
+                  </button>
+                </span>
+              </div>
+            </div>
+          )}
+
+          <div
+            data-canvas="reflow"
+            className={`w-full flex-1 px-2 sm:px-4 py-2 flex flex-col justify-start gap-3 ${className}`}
+          >
+            {children}
+          </div>
+        </div>
+      </div>
+
+      {/* Vạch tiến độ cuộn trong slide */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] z-20 pointer-events-none" aria-hidden="true">
+        <div
+          ref={barRef}
+          className="h-full w-full origin-left bg-gradient-to-r from-[#54D7E8] to-[#D8F36A]"
+          style={{ transform: 'scaleX(0)', opacity: 0 }}
+        />
+      </div>
+      {/* Vệt mờ báo còn nội dung bên dưới */}
+      <div
+        ref={fadeRef}
+        className="absolute bottom-0 left-0 right-0 h-10 z-20 pointer-events-none transition-opacity duration-200"
+        style={{ opacity: 0, background: 'linear-gradient(to top, rgba(5,14,23,0.92), rgba(5,14,23,0))' }}
+        aria-hidden="true"
+      />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import SlideTransitioner from './components/SlideTransitioner';
 import SlideShell from './components/SlideShell';
 import SidePanel from './components/SidePanel';
 import Dock from './components/Dock';
-import SlideGridModal from './components/SlideGridModal';
+import MiniRail from './components/MiniRail';
 import SvgDefs from './svg/SvgDefs';
 import { useLayoutMode } from './hooks/useLayoutMode';
 import { SLIDES_REGISTRY, TOTAL_SLIDES, getSlideById } from './config/slides';
@@ -44,7 +44,7 @@ export default function App() {
   });
   // Giữ panel "đang hiển thị" thêm một nhịp sau khi đóng để chạy animation trượt ra
   const [panelRendered, setPanelRendered] = useState(false);
-  const [panelTab, setPanelTab] = useState('notes'); // 'notes' | 'toc' | 'settings'
+  const [panelTab, setPanelTab] = useState('notes'); // 'notes' | 'settings'
   const [panelWidth, setPanelWidth] = useState(() => {
     try {
       const savedW = localStorage.getItem('acid_panel_width');
@@ -63,7 +63,6 @@ export default function App() {
 
   const [isPresentMode, setIsPresentMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isOverviewGridOpen, setIsOverviewGridOpen] = useState(false);
   const [isHoverBottom, setIsHoverBottom] = useState(false);
   const [blackoutScreen, setBlackoutScreen] = useState(null); // null | 'black' | 'white'
   const [laserMode, setLaserMode] = useState(null); // null | 'laser' | 'spotlight'
@@ -85,6 +84,20 @@ export default function App() {
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.85);
   const [sheetLevel, setSheetLevel] = useState('peek'); // 'peek' | 'half' | 'full'
+  const [railOpen, setRailOpen] = useState(() => {
+    try {
+      return localStorage.getItem('acid_rail_open') !== '0';
+    } catch {
+      return true;
+    }
+  });
+  const [fitMode, setFitMode] = useState(() => {
+    try {
+      return localStorage.getItem('acid_fit_mode') || 'readable';
+    } catch {
+      return 'readable';
+    }
+  }); // 'readable' | 'fit' (chỉ áp dụng trên điện thoại)
 
   useEffect(() => {
     if (isPanelOpen) {
@@ -102,7 +115,39 @@ export default function App() {
   }, [isPanelCompact]);
 
   const appRootRef = useRef(null);
-  const { stageRef, layoutMode, stageWidth, stageHeight } = useLayoutMode();
+  const { stageRef, layoutMode, isPhone, device, orientation, isTouch, viewportWidth, stageWidth, stageHeight } =
+    useLayoutMode();
+
+  // CSS cần biết chế độ ở cấp <html> (cỡ chữ lưu động của reflow dùng rem nên phải đặt trên html)
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.layout = layoutMode;
+    root.dataset.device = device;
+    return () => {
+      delete root.dataset.layout;
+      delete root.dataset.device;
+    };
+  }, [layoutMode, device]);
+
+  // Chiều cao dock: cộng thêm vùng an toàn (thanh home iPhone/iPad) để nút không bị ép lại
+  const dockBase = layoutMode === 'reflow' ? (viewportWidth >= 700 ? 64 : 56) : 48;
+  // Điện thoại ngang: bỏ dock dưới, dùng thanh MiniRail; sidebar kịch bản nổi lên trên slide
+  const phoneCanvas = isPhone && layoutMode === 'canvas';
+  const panelCompact = isPanelCompact && !phoneCanvas;
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('acid_rail_open', railOpen ? '1' : '0');
+    } catch {}
+  }, [railOpen]);
+
+  const handleChangeFitMode = (m) => {
+    setFitMode(m);
+    try {
+      localStorage.setItem('acid_fit_mode', m);
+    } catch {}
+  };
+
 
   // Unlock audio on first user gesture & synchronize mute/volume state
   useEffect(() => {
@@ -285,15 +330,6 @@ export default function App() {
     });
   }, [panelTab, isPanelCompact]);
 
-  const toggleGrid = useCallback(() => {
-    setIsPanelOpen((open) => {
-      if (open && panelTab === 'toc' && !isPanelCompact) return false;
-      setPanelTab('toc');
-      setIsPanelCompact(false);
-      return true;
-    });
-  }, [panelTab, isPanelCompact]);
-
   const toggleSettings = useCallback(() => {
     setIsPanelOpen((open) => {
       if (open && panelTab === 'settings' && !isPanelCompact) return false;
@@ -408,16 +444,6 @@ export default function App() {
         return;
       }
 
-      if (e.key === 'g' || e.key === 'G') {
-        e.preventDefault();
-        if (e.shiftKey) {
-          setIsOverviewGridOpen((prev) => !prev);
-        } else {
-          toggleGrid();
-        }
-        return;
-      }
-
       if (e.key === '\\') {
         e.preventDefault();
         if (!isPanelOpen) {
@@ -509,10 +535,6 @@ export default function App() {
           setBlackoutScreen(null);
           return;
         }
-        if (isOverviewGridOpen) {
-          setIsOverviewGridOpen(false);
-          return;
-        }
         if (isPanelOpen) {
           setIsPanelOpen(false);
           return;
@@ -532,7 +554,6 @@ export default function App() {
     goToFirst,
     goToLast,
     toggleNotes,
-    toggleGrid,
     toggleSettings,
     togglePresentMode,
     toggleFullscreen,
@@ -588,9 +609,13 @@ export default function App() {
       data-layout={layoutMode}
       data-present={isPresentMode ? 'true' : 'false'}
       data-panel-pos={panelPos}
+      data-phone={phoneCanvas ? 'true' : 'false'}
+      data-device={device}
+      data-orient={orientation}
+      data-rail={phoneCanvas && railOpen ? panelPos : 'off'}
       style={{
-        '--dock-h': isPresentMode ? '0px' : layoutMode === 'reflow' ? '56px' : '48px',
-        '--panel-w': panelRendered && layoutMode === 'canvas' ? (isPanelCompact ? '56px' : `${panelWidth}px`) : '0px',
+        '--dock-h': isPresentMode || phoneCanvas ? '0px' : `calc(${dockBase}px + env(safe-area-inset-bottom, 0px))`,
+        '--panel-w': panelRendered && layoutMode === 'canvas' && !phoneCanvas ? (panelCompact ? '56px' : `${panelWidth}px`) : '0px',
         '--sheet-h': panelRendered && layoutMode === 'reflow' ? mobileSheetHeight : '0px',
       }}
       className="bg-[#050E17] text-[#F8FAFC] select-none font-sans relative"
@@ -637,6 +662,10 @@ export default function App() {
           stageWidth={stageWidth}
           stageHeight={stageHeight}
           currentSlide={currentSlide}
+          isPhone={phoneCanvas}
+          readable={fitMode === 'readable'}
+          device={device}
+          isTouch={isTouch}
         >
           <SlideTransitioner
             key={replayKey}
@@ -678,7 +707,10 @@ export default function App() {
           setIsPanelCompact(false);
         }}
         onClose={() => setIsPanelOpen(false)}
-        isCompact={isPanelCompact}
+        isCompact={panelCompact}
+        isPhone={phoneCanvas}
+        fitMode={fitMode}
+        onChangeFitMode={handleChangeFitMode}
         onToggleCompact={() => setIsPanelCompact((c) => !c)}
         currentSlide={currentSlide}
         goToSlide={(s) => {
@@ -709,7 +741,7 @@ export default function App() {
       />
 
       {/* IN-FLOW DOCK (Contract: [data-dock]) */}
-      {!isPresentMode && (
+      {!isPresentMode && !phoneCanvas && (
         <Dock
           currentSlide={currentSlide}
           totalSlides={TOTAL_SLIDES}
@@ -718,8 +750,6 @@ export default function App() {
           goToSlide={goToSlide}
           isNotesOpen={isPanelOpen && panelTab === 'notes'}
           onToggleNotes={toggleNotes}
-          isGridOpen={isPanelOpen && panelTab === 'toc'}
-          onToggleGrid={toggleGrid}
           isFullscreen={isFullscreen}
           toggleFullscreen={toggleFullscreen}
           isPresentMode={isPresentMode}
@@ -746,14 +776,14 @@ export default function App() {
       {/* OVERLAY OK (Contract: [data-overlay-ok] for laser, toasts, floating dock in present mode) */}
       <div data-overlay-ok>
         {/* Floating Quick Edge Toggle Tab when Sidebar is closed */}
-        {!isPanelOpen && !isPresentMode && layoutMode === 'canvas' && (
+        {!isPanelOpen && !isPresentMode && layoutMode === 'canvas' && !phoneCanvas && (
           <button
             onClick={() => {
               sfx.tick();
               setIsPanelOpen(true);
             }}
-            aria-label="Mở nhanh bảng kịch bản và mục lục"
-            title="Mở sidebar kịch bản & mục lục (Phím N hoặc G)"
+            aria-label="Mở nhanh bảng kịch bản"
+            title="Mở sidebar kịch bản (Phím N)"
             className={`fixed top-1/2 -translate-y-1/2 z-40 flex items-center gap-1 py-3 px-1.5 bg-[#081724]/90 hover:bg-[#0D2234] border border-[#1E3A4D] hover:border-[#54D7E8]/70 text-[#94A3B8] hover:text-[#54D7E8] backdrop-blur-md shadow-2xl transition-all duration-200 active:scale-95 group ${
               panelPos === 'right'
                 ? 'right-0 rounded-l-2xl border-r-0 hover:pl-2.5'
@@ -762,7 +792,7 @@ export default function App() {
           >
             {panelPos === 'right' ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}
             <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-bold tracking-widest uppercase select-none opacity-80 group-hover:opacity-100">
-              Kịch bản • Mục lục
+              Kịch bản
             </span>
           </button>
         )}
@@ -788,7 +818,7 @@ export default function App() {
         )}
 
         {/* Present mode floating dock capsule */}
-        {isPresentMode && (
+        {isPresentMode && !phoneCanvas && (
           <div
             onMouseEnter={() => setIsHoverBottom(true)}
             onMouseLeave={() => setIsHoverBottom(false)}
@@ -807,8 +837,6 @@ export default function App() {
               goToSlide={goToSlide}
               isNotesOpen={isPanelOpen && panelTab === 'notes'}
               onToggleNotes={toggleNotes}
-              isGridOpen={isPanelOpen && panelTab === 'toc'}
-              onToggleGrid={toggleGrid}
               isFullscreen={isFullscreen}
               toggleFullscreen={toggleFullscreen}
               isPresentMode={isPresentMode}
@@ -829,14 +857,31 @@ export default function App() {
           </div>
         )}
 
-        {/* Big Overview Slide Grid (Shift+G) */}
-        <SlideGridModal
-          isOpen={isOverviewGridOpen}
-          onClose={() => setIsOverviewGridOpen(false)}
-          currentSlide={currentSlide}
-          totalSlides={TOTAL_SLIDES}
-          onSelectSlide={goToSlide}
-        />
+        {/* Điện thoại ngang: thanh điều khiển nhỏ gọn + nền mờ khi mở kịch bản */}
+        {phoneCanvas && (
+          <>
+            {isPanelOpen && (
+              <div
+                className="fixed inset-0 z-[55] bg-black/35"
+                onClick={() => setIsPanelOpen(false)}
+                aria-hidden="true"
+              />
+            )}
+            <MiniRail
+              currentSlide={currentSlide}
+              totalSlides={TOTAL_SLIDES}
+              onPrev={goToPrev}
+              onNext={goToNext}
+              isOpen={railOpen}
+              onToggleOpen={() => setRailOpen((o) => !o)}
+              pos={panelPos}
+              isNotesOpen={isPanelOpen}
+              onToggleNotes={toggleNotes}
+              isFullscreen={isFullscreen}
+              onToggleFullscreen={toggleFullscreen}
+            />
+          </>
+        )}
       </div>
     </div>
   );
